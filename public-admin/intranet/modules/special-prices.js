@@ -110,6 +110,36 @@ export function createSpecialPricesUI({
     else updateFixedPreview();
   }
 
+  // ✅ Cablea los inputs Inicio/Fin con la MISMA selección que usan los clicks del calendario.
+  // Los <input type="date"> dan "YYYY-MM-DD"; usamos parseISO (local) para no desplazar días.
+  // Devuelve true si ha escrito la selección, false si los inputs están incompletos
+  // o el rango es inválido (en ese caso deja el aviso correspondiente).
+  function applyInputsToSelection(startEl, endEl, setMsg) {
+    if (!cal?.setSelectedDays) return false;
+
+    const sv = startEl?.value || "";
+    const ev = endEl?.value || "";
+
+    // Falta alguno de los dos: no tocamos la selección (que decidan otras vías).
+    if (!sv || !ev) return false;
+
+    // inicio > fin (comparación lexicográfica válida para YYYY-MM-DD): no seleccionamos nada.
+    if (ev < sv) {
+      setMsg?.("El rango es incorrecto: Inicio debe ser anterior o igual a Fin.");
+      return false;
+    }
+
+    const days = [];
+    for (const day of eachDayInclusive(parseISO(sv), parseISO(ev))) {
+      days.push(toISO(day));
+    }
+
+    // setSelectedDays actualiza el contador "Seleccionados: N", repinta el resaltado
+    // y dispara notifySelection() → rellena selectedDaysCache + refreshActivePreview().
+    cal.setSelectedDays(days);
+    return true;
+  }
+
   async function fetchBusyNightsForRange(propertyId, startISO, endISOEx) {
     const busy = new Set();
 
@@ -676,8 +706,14 @@ export function createSpecialPricesUI({
       updateFixedPreview();
     }
   });
-  spStart?.addEventListener("input", () => { if (activeSpTab === "fixed") updateFixedPreview(); });
-  spEnd?.addEventListener("input", () => { if (activeSpTab === "fixed") updateFixedPreview(); });
+  spStart?.addEventListener("change", () => {
+    if (activeSpTab !== "fixed") return;
+    if (!applyInputsToSelection(spStart, spEnd, setSpMsg)) updateFixedPreview();
+  });
+  spEnd?.addEventListener("change", () => {
+    if (activeSpTab !== "fixed") return;
+    if (!applyInputsToSelection(spStart, spEnd, setSpMsg)) updateFixedPreview();
+  });
   spPrice?.addEventListener("input", () => { if (activeSpTab === "fixed") updateFixedPreview(); });
 
   seasonProperty?.addEventListener("change", async () => {
@@ -698,8 +734,14 @@ export function createSpecialPricesUI({
       updateSeasonPreview();
     }
   });
-  seasonStart?.addEventListener("input", () => { if (activeSpTab === "season") updateSeasonPreview(); });
-  seasonEnd?.addEventListener("input", () => { if (activeSpTab === "season") updateSeasonPreview(); });
+  seasonStart?.addEventListener("change", () => {
+    if (activeSpTab !== "season") return;
+    if (!applyInputsToSelection(seasonStart, seasonEnd, setSeasonMsg)) updateSeasonPreview();
+  });
+  seasonEnd?.addEventListener("change", () => {
+    if (activeSpTab !== "season") return;
+    if (!applyInputsToSelection(seasonStart, seasonEnd, setSeasonMsg)) updateSeasonPreview();
+  });
   seasonPercent?.addEventListener("input", () => { if (activeSpTab === "season") updateSeasonPreview(); });
   seasonWeekendsOnly?.addEventListener("change", () => { if (activeSpTab === "season") updateSeasonPreview(); });
 

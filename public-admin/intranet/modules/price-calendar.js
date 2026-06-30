@@ -734,6 +734,7 @@ export function createPriceCalendar({ db, serverTimestamp, escapeHtml }) {
     setRangeSelectionHandler,
     clearRangeSelection,
     getSelectedDays,
+    setSelectedDays,
     refresh,
   };
 }
