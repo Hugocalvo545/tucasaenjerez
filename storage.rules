@@ -1,0 +1,38 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.uid in ["9YsZ5CGjQLRHsP055UwxzB7yMsa2"]
+        // PRODUCCIÓN: añadir el UID del admin real en producción
+        ||
+        request.auth.token.email in ["hugocalvogarcia123@gmail.com"]
+        // PRODUCCIÓN: cambiar al email del admin real
+      );
+    }
+
+    // Imágenes de apartamentos: lectura pública, escritura solo admin
+    match /apartamentos/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Imágenes de packs: lectura pública, escritura solo admin
+    match /packs/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Recursos públicos (logos, iconos, etc.): lectura pública, escritura solo admin
+    match /public/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Cortafuegos: todo lo demás denegado
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

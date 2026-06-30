@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>JLA · Just Luxury Apartments</title>
+
+    <!-- Calienta la carga del booking -->
+    <link rel="prefetch" href="/multi/" as="document" />
+    <link rel="preload" href="/css/styles.css" as="style" />
+    <link rel="preload" href="/css/multi-overrides.css" as="style" />
+
+    <style>
+      :root{
+        --bg:#07090d;
+        --bg2:#0b0e16;
+        --gold:#caa45c;
+        --gold2:#f1d48a;
+        --ink:rgba(255,255,255,.92);
+        --muted:rgba(255,255,255,.62);
+      }
+
+      *{box-sizing:border-box}
+      html,body{height:100%}
+      body{
+        margin:0;
+        background: radial-gradient(1200px 800px at 30% 25%, #12172a 0%, var(--bg) 55%),
+                    radial-gradient(900px 600px at 75% 70%, #101524 0%, var(--bg2) 60%);
+        color: var(--ink);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        overflow:hidden;
+      }
+
+      /* “Vídeo” base */
+      .stage{
+        position:relative;
+        height:100%;
+        display:grid;
+        place-items:center;
+        isolation:isolate;
+      }
+
+      /* Luz suave moviéndose (cinemática) */
+      .lightSweep{
+        position:absolute;
+        inset:-30%;
+        background:
+          radial-gradient(circle at 20% 40%, rgba(202,164,92,.18), transparent 55%),
+          radial-gradient(circle at 70% 65%, rgba(241,212,138,.10), transparent 60%),
+          conic-gradient(from 180deg at 50% 50%,
+            rgba(255,255,255,.10), transparent 15%, transparent 55%, rgba(255,255,255,.08), transparent 75%);
+        filter: blur(26px);
+        opacity:.75;
+        animation: drift 3.4s ease-in-out forwards;
+        z-index:0;
+      }
+
+      /* Grano/film */
+      .grain{
+        position:absolute;
+        inset:-40%;
+        background-image:
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+        mix-blend-mode: overlay;
+        opacity:.35;
+        animation: grainMove 1.2s steps(2) infinite;
+        z-index:1;
+        pointer-events:none;
+      }
+
+      /* Viñeteado */
+      .vignette{
+        position:absolute;
+        inset:0;
+        background: radial-gradient(circle at 50% 50%, transparent 45%, rgba(0,0,0,.65) 100%);
+        z-index:2;
+        pointer-events:none;
+      }
+
+      /* Contenido */
+      .brand{
+        position:relative;
+        z-index:3;
+        width:min(760px, 90vw);
+        text-align:center;
+        transform: translateY(14px) scale(.985);
+        opacity:0;
+        filter: blur(10px);
+        animation: reveal 1.25s ease both;
+        animation-delay: .20s;
+      }
+
+      /* Wrapper del logo real */
+      .logoWrap{
+        position: relative;
+        width: min(320px, 70vw);
+        margin: 0 auto 14px;
+        display: grid;
+        place-items: center;
+        filter: drop-shadow(0 20px 45px rgba(0,0,0,.55));
+        animation: floaty 3.2s ease-in-out both;
+        animation-delay: .6s;
+      }
+
+      .logoImg{
+        width: 100%;
+        height: auto;
+        display: block;
+
+        /* “cinema”: un pelín de contraste y glow suave */
+        filter: contrast(1.08) brightness(1.02) drop-shadow(0 10px 28px rgba(0,0,0,.55));
+        border-radius: 14px;
+
+        /* entrada */
+        transform: translateY(10px) scale(.98);
+        opacity: 0;
+        filter: blur(10px) contrast(1.08) brightness(1.02);
+        animation: logoIn 1.15s ease both;
+        animation-delay: .35s;
+      }
+
+      /* Brillo que cruza el logo */
+      .logoSheen{
+        position:absolute;
+        inset:-12%;
+        background: linear-gradient(110deg,
+          transparent 35%,
+          rgba(241,212,138,.38) 50%,
+          transparent 65%);
+        transform: translateX(-120%) rotate(-2deg);
+        filter: blur(3px);
+        opacity: .9;
+        mix-blend-mode: screen;
+        pointer-events: none;
+        animation: sheen 1.25s ease both;
+        animation-delay: 1.05s;
+      }
+
+      .name{
+        letter-spacing:.32em;
+        font-weight:700;
+        font-size: clamp(14px, 1.9vw, 18px);
+        text-transform:uppercase;
+        color: rgba(255,255,255,.86);
+      }
+
+      .tagline{
+        margin-top:10px;
+        font-size: clamp(12px, 1.6vw, 14px);
+        color: var(--muted);
+        letter-spacing:.06em;
+      }
+
+      .divider{
+        width:min(560px, 86%);
+        height:1px;
+        margin:18px auto 0;
+        background: linear-gradient(90deg, transparent, rgba(202,164,92,.55), transparent);
+        opacity:.85;
+        transform: scaleX(.75);
+        animation: lineIn .9s ease both;
+        animation-delay: .75s;
+      }
+
+      /* Fade final antes de redirigir */
+      .fadeOut{
+        position:absolute;
+        inset:0;
+        background:#000;
+        opacity:0;
+        z-index:4;
+        animation: fadeToBlack .55s ease both;
+        animation-delay: 3.05s;
+        pointer-events:none;
+      }
+
+      @keyframes drift{
+        0%   { transform: translate3d(-2%, -1%, 0) rotate(-2deg) scale(1.05); opacity:0; }
+        20%  { opacity:.8; }
+        60%  { transform: translate3d(2.5%, 1.6%, 0) rotate(1deg) scale(1.08); opacity:.85; }
+        100% { transform: translate3d(3.5%, 2.2%, 0) rotate(1.6deg) scale(1.10); opacity:.65; }
+      }
+      @keyframes grainMove{
+        0%{ transform: translate3d(0,0,0) }
+        25%{ transform: translate3d(-2%,1%,0) }
+        50%{ transform: translate3d(1%,-2%,0) }
+        75%{ transform: translate3d(2%,2%,0) }
+        100%{ transform: translate3d(0,0,0) }
+      }
+      @keyframes reveal{
+        from{ opacity:0; filter: blur(10px); transform: translateY(14px) scale(.985); }
+        to{   opacity:1; filter: blur(0);    transform: translateY(0)    scale(1);    }
+      }
+      @keyframes logoIn{
+        from{ transform: translateY(10px) scale(.98); opacity:0; filter: blur(10px) contrast(1.08) brightness(1.02); }
+        to{   transform: translateY(0)    scale(1);  opacity:1; filter: blur(0)     contrast(1.08) brightness(1.02); }
+      }
+      @keyframes sheen{
+        from{ transform: translateX(-120%) rotate(-2deg); opacity:.9; }
+        to{   transform: translateX(120%)  rotate(-2deg); opacity:0;  }
+      }
+      @keyframes floaty{
+        0%  { transform: translateY(0);   }
+        60% { transform: translateY(-4px); }
+        100%{ transform: translateY(-2px); }
+      }
+      @keyframes lineIn{
+        from{ transform: scaleX(.75); opacity:.85; }
+        to{   transform: scaleX(1);   opacity:1;   }
+      }
+      @keyframes fadeToBlack{
+        from{ opacity:0; }
+        to{   opacity:1; }
+      }
+
+      /* Accesibilidad */
+      @media (prefers-reduced-motion: reduce){
+        .lightSweep,.grain,.brand,.logoImg,.logoSheen,.divider,.fadeOut{ animation:none!important; }
+        .brand{ opacity:1; transform:none; filter:none; }
+        .logoImg{ opacity:1; transform:none; filter: contrast(1.05) brightness(1.02); }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="stage" id="stage">
+      <div class="lightSweep"></div>
+      <div class="grain"></div>
+      <div class="vignette"></div>
+
+      <main class="brand" aria-label="JLA Just Luxury Apartments">
+        <!-- Logo real -->
+        <div class="logoWrap" aria-label="JLA logo">
+          <img class="logoImg" src="img/Logo-JLA.jpg" alt="JLA" />
+          <span class="logoSheen" aria-hidden="true"></span>
+        </div>
+
+        <div class="name">Just Luxury Apartments</div>
+        <div class="tagline">Experiencias premium · Reservas inteligentes · Atención directa</div>
+        <div class="divider"></div>
+      </main>
+
+      <div class="fadeOut"></div>
+    </div>
+
+    <script>
+      // Redirección al terminar la intro
+      const DEST = "/multi/";
+      const TOTAL_MS = 3600; // duración total del “clip”
+      const HARD_MAX = 6500; // fallback seguro
+
+      // Calienta un poco el destino sin bloquear
+      try { fetch(DEST, { cache: "force-cache" }).catch(()=>{}); } catch(e){}
+
+      // Redirige al acabar el clip (sin dejar “historial” molesto)
+      const go = () => window.location.replace(DEST);
+
+      setTimeout(go, TOTAL_MS);
+      setTimeout(go, HARD_MAX);
+
+      // Si el usuario vuelve atrás y queda cacheado, reenvía directo
+      window.addEventListener("pageshow", (e) => {
+        if (e.persisted) go();
+      });
+    </script>
+  </body>
+</html>

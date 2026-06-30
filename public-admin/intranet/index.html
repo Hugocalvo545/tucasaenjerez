@@ -1,0 +1,913 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Intranet · Gestión</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#003580" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="JLA Intranet" />
+  <link rel="apple-touch-icon" href="/img/icon-192.png" />
+  <link rel="icon" href="/img/icon-192.png" />
+
+  <!-- Design system base (tokens + componentes) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/design-system.css">
+
+  <!-- Base + Intranet -->
+  <!-- <link rel="stylesheet" href="../css/styles.css" /> -->
+  <link rel="stylesheet" href="../css/intranet.css" />
+</head>
+
+<body class="intranet">
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="logo">Intranet Alojamientos</span>
+    </div>
+    <div class="topbar-right">
+      <span id="userEmail"></span>
+      <button id="logoutBtn" class="btn-secondary" style="display:none;">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- LOGIN -->
+    <section id="loginView" class="centered">
+      <div class="card card-tight">
+        <h1>Acceso</h1>
+        <p class="muted">Solo usuarios autorizados</p>
+        <form id="loginForm">
+          <label>
+            Email
+            <input type="email" id="loginEmail" class="input" inputmode="email" autocomplete="username" autocapitalize="off" required />
+          </label>
+          <label>
+            Contraseña
+            <input type="password" id="loginPassword" class="input" autocomplete="current-password" required />
+          </label>
+          <button type="submit" class="btn-primary full">Entrar</button>
+          <p id="loginError" class="error-msg"></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- SIN PERMISOS -->
+    <section id="noAccessView" class="centered" style="display:none;">
+      <div class="card card-tight">
+        <h1>Sin acceso</h1>
+        <p class="muted">
+          Tu usuario no tiene permisos de administrador para entrar en la intranet.
+        </p>
+        <button id="noAccessLogoutBtn" class="btn-secondary full">Cerrar sesión</button>
+      </div>
+    </section>
+
+    <!-- INTRANET -->
+    <section id="mainView" style="display:none;">
+
+      <!-- NAV tipo Booking -->
+      <nav class="bk-nav">
+        <div class="bk-nav-left">
+          <button class="tab active" data-tab="dashboard">Página de inicio del grupo</button>
+          <button class="tab" data-tab="reservas">
+            Reservas
+            <span id="hostMsgBadge" class="nav-badge" style="display:none"></span>
+          </button>
+          <button class="tab" data-tab="ganancias">Ganancias estratégicas</button>
+          <button class="tab" data-tab="comentarios">Comentarios</button>
+          <button class="tab" data-tab="registroViajeros">Registro viajeros</button>
+
+          <div class="bk-dropdown">
+            <button class="bk-dropbtn" type="button">Administración <span class="chev">▾</span></button>
+            <div class="bk-dropmenu">
+              <button class="tab" data-tab="alojamientos">Alojamientos</button>
+              <button class="tab" data-tab="precios">Precios especiales</button>
+              <button class="tab" data-tab="packs">Packs</button>
+            </div>
+          </div>
+
+          <!--
+          <button id="navNewBtn" class="btn-primary btn-sm nav-new" type="button">Nuevo</button>
+
+          <div class="bk-dropdown">
+            <button class="bk-dropbtn" type="button">Más <span class="chev">▾</span></button>
+            <div class="bk-dropmenu">
+              <button class="tab" data-tab="oportunidades">Centro de oportunidades de grupo</button>
+              <button class="tab" data-tab="mercado">Datos clave del mercado</button>
+            </div>
+          </div>
+          -->
+        </div>
+      </nav>
+
+      <!-- =======================
+           DASHBOARD (HOME)
+      ======================== -->
+      <section id="tab-dashboard" class="tab-content active">
+        <div class="card">
+          <div class="dash-top">
+            <div class="dash-search">
+              <input id="dashSearchInput" type="text" placeholder="Filtra por ID, nombre o ciudad..." />
+            </div>
+
+            <div class="dash-actions">
+              <button id="dash48Btn" class="btn-secondary btn-sm active">Próximas 48h</button>
+              <button id="dash7Btn" class="btn-secondary btn-sm">Próximos 7 días</button>
+              <button id="dashNextBtn" class="btn-primary btn-sm">Próxima reserva</button>
+            </div>
+          </div>
+
+          <h2 style="margin-top:0.5rem;">Hoy</h2>
+
+          <div class="dash-cards">
+            <div class="dash-card">
+              <div class="dash-num" id="dashReservas">0</div>
+              <div class="dash-label">Reservas</div>
+            </div>
+            <div class="dash-card">
+              <div class="dash-num" id="dashLlegadas">0</div>
+              <div class="dash-label">Llegadas</div>
+            </div>
+            <div class="dash-card">
+              <div class="dash-num" id="dashSalidas">0</div>
+              <div class="dash-label">Salidas</div>
+            </div>
+            <div class="dash-card">
+              <div class="dash-num" id="dashComentarios">0</div>
+              <div class="dash-label">Comentarios</div>
+            </div>
+            <div class="dash-card">
+              <div class="dash-num" id="dashCancelaciones">0</div>
+              <div class="dash-label">Cancelaciones</div>
+            </div>
+          </div>
+
+          <div class="dash-subbar">
+            <div class="dash-filter">
+              <label class="muted" for="dashPropertyFilter" style="font-size:0.9rem;">Filtrar por alojamiento</label>
+              <select id="dashPropertyFilter">
+                <option value="">Todos los alojamientos</option>
+              </select>
+            </div>
+
+            <div class="dash-hint muted" id="dashHint"></div>
+          </div>
+
+          <div class="dash-table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Alojamiento</th>
+                  <th>Estado</th>
+                  <th id="dashColLlegadas">Llegadas próximas 48h</th>
+                  <th id="dashColSalidas">Salidas próximas 48h</th>
+                  <th>Mensajes de los clientes</th>
+                  <th>Mensajes de Booking.com</th>
+                </tr>
+              </thead>
+              <tbody id="dashTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- =======================
+           ALOJAMIENTOS
+      ======================== -->
+      <section id="tab-alojamientos" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <h2>Alojamientos</h2>
+            <button id="newPropertyBtn" class="btn-primary">+ Nuevo alojamiento</button>
+          </div>
+
+          <div class="split">
+            <!-- Lista -->
+            <div class="panel">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Orden</th>
+                    <th>Nombre</th>
+                    <th>Ciudad</th>
+                    <th>Cap.</th>
+                    <th>Precio base</th>
+                    <th>Activo</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="propertiesBody"></tbody>
+              </table>
+
+              <!-- ===== Calendario (ALOJAMIENTOS) ===== -->
+              <div class="card intranet-cal-wrap">
+                <div class="calendar-header">
+                  <h3 id="calTitle">Calendario</h3>
+                  <div class="calendar-nav">
+                    <button type="button" id="calPrev">‹</button>
+                    <button type="button" id="calToday">Hoy</button>
+                    <button type="button" id="calNext">›</button>
+                  </div>
+                </div>
+
+                <div class="cal-toolbar">
+                  <div class="cal-actions">
+                    <button type="button" id="calBlockBtn" class="btn-primary btn-sm">Bloquear rango</button>
+                    <button type="button" id="calUnblockBtn" class="btn-secondary btn-sm">Liberar bloqueos</button>
+                  </div>
+                </div>
+
+                <div id="calMonthLabel" class="cal-month-label"></div>
+                <div class="calendar-grid" id="calGrid"></div>
+
+                <div class="calendar-legend">
+                  <div class="legend-item"><span class="legend-color available"></span> Disponible</div>
+                  <div class="legend-item"><span class="legend-color occupied"></span> Reservado</div>
+                  <div class="legend-item"><span class="legend-color hold"></span> Bloqueo interno</div>
+                </div>
+
+                <div id="calInfo" class="cal-info">
+                  Selecciona un alojamiento en la lista para ver su calendario.
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel lateral (Resumen + Edición) -->
+            <div class="panel" id="propertySidePanel">
+
+              <!-- Sticky: alojamiento seleccionado + acciones globales -->
+              <div class="prop-sticky-head" id="propStickyHead" style="display:none">
+                <div class="prop-sticky-meta">
+                  <div class="prop-sticky-title" id="propStickyTitle">Alojamiento</div>
+                  <div class="prop-sticky-sub" id="propStickySub"></div>
+                </div>
+                <div class="prop-sticky-actions">
+                  <!-- Este botón será "Editar todo" en el JS nuevo -->
+                  <button type="button" class="btn-secondary btn-sm" id="propEnableEditBtn">Editar todo</button>
+                  <button type="button" class="btn-secondary btn-sm" id="propCancelEditBtn" style="display:none">Cancelar</button>
+                </div>
+              </div>
+
+              <!-- NUEVO: Resumen editable (quick edit) -->
+              <!-- El JS renderiza aquí los "cuadrados", el botón Guardar rápido y el acceso a Fotos -->
+              <div
+                id="propSummaryCard"
+                class="prop-summary"
+                style="display:none"
+                role="region"
+                aria-label="Resumen del apartamento (edición rápida)"
+              ></div>
+
+              <!-- Mantengo esto por compatibilidad temporal con el JS anterior -->
+              <div id="propViewBox" class="prop-view-box" style="display:none"></div>
+
+              <h3 id="formTitle">Nuevo alojamiento</h3>
+
+              <form id="propertyForm">
+                <input type="hidden" id="propertyId" />
+
+                <!-- NUEVO: Caja para edición completa (solo se muestra en "Editar todo" o en Nuevo) -->
+                <div id="propFullFieldsBox">
+
+                  <section class="prop-edit-sec" data-prop-sec="nombre">
+                    <label>
+                      Nombre <br>
+                      <input type="text" id="nombre" required />
+                    </label>
+                  </section>
+
+                  <section class="prop-edit-sec" data-prop-sec="ubicacion">
+                    <label>
+                      Dirección <br>
+                      <input type="text" id="direccion" />
+                    </label>
+
+                    <label>
+                      Ciudad <br>
+                      <input type="text" id="ciudad" />
+                    </label>
+                  </section>
+
+                  <section class="prop-edit-sec" data-prop-sec="capacidad">
+                    <div class="row">
+                      <label>
+                        Capacidad
+                        <input type="number" id="capacidad" min="1" />
+                      </label>
+                      <label>
+                        Dormitorios
+                        <input type="number" id="dormitorios" min="0" />
+                      </label>
+                      <label>
+                        Baños
+                        <input type="number" id="banos" min="0" />
+                      </label>
+                    </div>
+                  </section>
+
+                  <section class="prop-edit-sec" data-prop-sec="textos">
+                    <label>
+                      Descripción corta
+                      <textarea id="descripcion" rows="2"></textarea>
+                    </label>
+
+                    <label>
+                      Descripción larga
+                      <textarea id="descripcionLarga" rows="4"></textarea>
+                    </label>
+
+                    <label>
+                      Tagline (frase corta)
+                      <input type="text" id="tagline" placeholder="Tu base perfecta para descubrir la zona" />
+                    </label>
+
+                    <label>
+                      Highlights (uno por línea)
+                      <textarea id="highlights" rows="4" placeholder="Céntrico&#10;Cama cómoda&#10;Cocina equipada"></textarea>
+                    </label>
+
+                    <label>
+                      Normas del alojamiento
+                      <textarea id="normas" rows="4" placeholder="No fumar. No mascotas. Silencio a partir de..."></textarea>
+                    </label>
+                  </section>
+
+                  <section class="prop-edit-sec" data-prop-sec="precio">
+                    <div class="row">
+                      <label>
+                        Precio base / noche (€)
+                        <input type="number" id="precioBase" min="0" step="1" />
+                      </label>
+                      <label>
+                        Estancia mínima (noches)
+                        <input type="number" id="minNights" min="1" step="1" value="1" />
+                      </label>
+                      <label class="checkbox-label">
+                        <input type="checkbox" id="activa" />
+                        Activo
+                      </label>
+                    </div>
+                  </section>
+
+                  <section class="prop-edit-sec" data-prop-sec="servicios">
+                    <label>
+                      Servicios (separados por comas)
+                      <input type="text" id="servicios" placeholder="Wi-Fi, Aire acondicionado, Cocina equipada..." />
+                    </label>
+                  </section>
+
+                  <section class="prop-edit-sec" data-prop-sec="mapa">
+                    <div class="row">
+                      <label>
+                        Latitud
+                        <input type="number" id="lat" step="0.000001" placeholder="40.416775" />
+                      </label>
+                      <label>
+                        Longitud
+                        <input type="number" id="lng" step="0.000001" placeholder="-3.703790" />
+                      </label>
+                    </div>
+                  </section>
+
+                  <section class="prop-edit-sec" data-prop-sec="horarios">
+                    <div class="row">
+                      <label>
+                        Check-in (hora)
+                        <input type="text" id="checkInTime" placeholder="15:00" />
+                      </label>
+                      <label>
+                        Check-out (hora)
+                        <input type="text" id="checkOutTime" placeholder="11:00" />
+                      </label>
+                    </div>
+                  </section>
+
+                </div>
+
+                <!-- NUEVO: Editor de fotos "debajo" (se podrá mostrar en quick edit y en full edit) -->
+                <div id="propPhotoEditorBox">
+                  <hr style="margin: 0.75rem 0;" />
+
+                  <label>
+                    Fotos del alojamiento
+                    <input type="file" id="propertyPhotos" accept="image/*" multiple />
+                  </label>
+
+                  <div id="photoPreview" class="photo-grid"></div>
+
+                  <p class="muted" id="photoHint">
+                    Puedes subir varias imágenes. Se guardan al pulsar "Guardar".
+                  </p>
+                </div>
+
+                <!-- Mantengo este wrapper por compatibilidad temporal con el JS anterior -->
+                <div id="propEditFields" style="display:none"></div>
+
+                <!-- NUEVO: Acciones SOLO para edición completa -->
+                <div id="propFullActionsBox">
+                  <div class="form-actions form-actions-split">
+                    <div class="form-actions-left">
+                      <button type="submit" class="btn-primary">Guardar</button>
+                      <button type="button" id="resetFormBtn" class="btn-secondary">Nuevo</button>
+                    </div>
+
+                    <div class="form-actions-right">
+                      <button
+                        type="button"
+                        id="deletePropertyBtn"
+                        class="btn-danger"
+                        style="display:none"
+                      >
+                        Eliminar alojamiento
+                      </button>
+                    </div>
+                  </div>
+
+                  <p id="formMessage" class="info-msg"></p>
+                </div>
+
+                <!-- Mantengo esto por compatibilidad temporal con el JS anterior -->
+                <div id="propEditActions" style="display:none"></div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- =======================
+           PRECIOS ESPECIALES (CALENDARIO EDITABLE + EDITOR LATERAL)
+      ======================== -->
+      <section id="tab-precios" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <h2>Precios especiales</h2>
+            <button id="clearPreviewBtn" class="btn-secondary btn-sm">Limpiar preview</button>
+          </div>
+
+          <div class="split">
+            <!-- PANEL IZQ: reglas -->
+            <div class="panel">
+
+              <!-- Tabs internas (NO usar class="tab" para no romper el tab system global) -->
+              <div class="sp-tabs" role="tablist" aria-label="Precios especiales">
+                <button type="button" class="sp-tab active" data-sp-tab="fixed" role="tab" aria-selected="true">
+                  Precio fijo
+                </button>
+                <button type="button" class="sp-tab" data-sp-tab="season" role="tab" aria-selected="false">
+                  Temporada alta (%)
+                </button>
+              </div>
+
+              <!-- TAB: Precio fijo -->
+              <section class="sp-tab-content active" data-sp-panel="fixed" role="tabpanel">
+                <div class="sp-block">
+                  <h3>Precio fijo por rango</h3>
+                  <p class="muted" id="spBaseInfo"></p>
+
+                  <label>Alojamiento
+                    <select id="spProperty"></select>
+                  </label>
+
+                  <div class="row">
+                    <label>Inicio
+                      <input type="date" id="spStart" />
+                    </label>
+                    <label>Fin
+                      <input type="date" id="spEnd" />
+                    </label>
+                  </div>
+
+                  <label>Precio / noche (€)
+                    <input type="number" id="spPrice" min="0" step="1" placeholder="Ej. 120" />
+                  </label>
+
+                  <div class="form-actions">
+                    <button id="spApplyBtn" type="button" class="btn-primary">Aplicar precio fijo</button>
+                    <button id="spClearBtn" type="button" class="btn-secondary">Borrar overrides del rango</button>
+                    <button id="spActivateBaseBtn" type="button" class="btn-secondary">Activar con precio base</button>
+                  </div>
+
+                  <p id="spMsg" class="info-msg"></p>
+                </div>
+              </section>
+
+              <!-- TAB: Temporada alta -->
+              <section class="sp-tab-content" data-sp-panel="season" role="tabpanel">
+                <div class="sp-block">
+                  <h3>Temporada alta por %</h3>
+                  <p class="muted" id="seasonBaseInfo"></p>
+
+                  <label>Alojamiento
+                    <select id="seasonProperty"></select>
+                  </label>
+
+                  <div class="row">
+                    <label>Inicio
+                      <input type="date" id="seasonStart" />
+                    </label>
+                    <label>Fin
+                      <input type="date" id="seasonEnd" />
+                    </label>
+                  </div>
+
+                  <div class="row">
+                    <label>% subida
+                      <input type="number" id="seasonPercent" step="1" placeholder="Ej. 20" />
+                    </label>
+
+                    <label class="checkbox-label" style="align-self:end;">
+                      <input type="checkbox" id="seasonWeekendsOnly" />
+                      Solo viernes/sábado
+                    </label>
+                  </div>
+
+                  <label>Nombre (opcional)
+                    <input type="text" id="seasonName" placeholder="Ej. Semana Santa, Feria..." />
+                  </label>
+
+                  <div class="form-actions">
+                    <button id="seasonApplyBtn" type="button" class="btn-primary">Aplicar temporada alta</button>
+                  </div>
+
+                  <p id="seasonMsg" class="info-msg"></p>
+                </div>
+              </section>
+
+              <p class="muted" style="margin-top:0.75rem;">
+                Tip: puedes seleccionar el rango directamente haciendo click en el calendario de la derecha.
+                Doble click en un día para abrir el editor lateral.
+              </p>
+            </div>
+
+            <!-- PANEL DER: calendario precios + editor lateral -->
+            <div class="panel">
+              <div id="preciosCalendarHost">
+                <div class="card price-cal-wrap">
+                  <div class="calendar-header">
+                    <h3 id="pcalTitle">Calendario de precios</h3>
+                    <div class="calendar-nav">
+                      <button type="button" id="pcalPrev">‹</button>
+                      <button type="button" id="pcalToday">Hoy</button>
+                      <button type="button" id="pcalNext">›</button>
+                    </div>
+                  </div>
+                  <div class="cal-toolbar" style="margin-top:8px;">
+                    <div class="cal-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
+                      <button type="button" id="pcalSaveSelBtn" class="btn-secondary btn-sm">Guardar selección</button>
+                      <button type="button" id="pcalRestoreSelBtn" class="btn-secondary btn-sm">Restaurar selección</button>
+                      <button type="button" id="pcalClearSelBtn" class="btn-secondary btn-sm">Limpiar selección</button>
+                      <button type="button" id="pcalClearSavedSelBtn" class="btn-secondary btn-sm">Borrar guardada</button>
+                    </div>
+                  </div>
+
+                  <div id="pcalMonthLabel" class="cal-month-label"></div>
+                  <div class="calendar-grid" id="pcalGrid"></div>
+
+                  <div class="calendar-legend">
+                    <div class="legend-item"><span class="legend-color available"></span> Disponible</div>
+                    <div class="legend-item"><span class="legend-color occupied"></span> Reservado</div>
+                    <div class="legend-item"><span class="legend-color hold"></span> Bloqueo interno</div>
+                    <div class="legend-item"><span class="legend-color special"></span> Override</div>
+                  </div>
+
+                  <div id="pcalInfo" class="cal-info">
+                    Selecciona un alojamiento arriba para ver su calendario de precios.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =======================
+           RESERVAS + CHAT
+      ======================== -->
+      <section id="tab-reservas" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <h2>Reservas</h2>
+            <span id="reservasBadge" class="badge" style="display:none;">Nueva reserva</span>
+          </div>
+
+          <div class="split">
+            <div class="panel">
+              <table class="table reservas-table">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Alojamiento</th>
+                    <th>Huésped</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Total</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="reservasBody"></tbody>
+              </table>
+            </div>
+
+            <div class="panel">
+              <h3>Detalle de la reserva</h3>
+              <div id="reservaDetail" class="reserva-detail muted">
+                Selecciona una reserva de la lista.
+              </div>
+
+              <hr style="margin: 0.75rem 0;" />
+
+              <h3>Chat con el cliente</h3>
+              <div id="chatMessages" class="chat-messages">
+                <p class="muted">Selecciona una reserva para ver el chat.</p>
+              </div>
+
+              <form id="chatForm" class="chat-form">
+                <input
+                  type="text"
+                  id="chatInput"
+                  placeholder="Escribe un mensaje al cliente..."
+                  autocomplete="off"
+                />
+                <button type="submit" class="btn-primary">Enviar</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =======================
+           PACKS
+      ======================== -->
+      <section id="tab-packs" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <h2>Packs</h2>
+            <button id="newPackBtn" class="btn-primary">+ Nuevo pack</button>
+          </div>
+
+          <div class="split">
+            <!-- Lista + calendario -->
+            <div class="panel">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Orden</th>
+                    <th>Nombre</th>
+                    <th>Grupo</th>
+                    <th>Apts.</th>
+                    <th>Cap.</th>
+                    <th>Precio base</th>
+                    <th>Activo</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="packsBody"></tbody>
+              </table>
+
+              <div class="card intranet-cal-wrap" style="margin-top:14px;">
+                <div class="calendar-header">
+                  <h3 id="packCalTitle">Disponibilidad del pack</h3>
+                  <div class="calendar-nav">
+                    <button type="button" id="packCalPrev">‹</button>
+                    <button type="button" id="packCalToday">Hoy</button>
+                    <button type="button" id="packCalNext">›</button>
+                  </div>
+                </div>
+
+                <div id="packCalMonthLabel" class="cal-month-label"></div>
+                <div class="calendar-grid" id="packCalGrid"></div>
+                <div id="packCalInfo" class="cal-info">Selecciona un pack con "Editar".</div>
+              </div>
+            </div>
+
+            <!-- Panel lateral (Resumen + Edición) -->
+            <div class="panel" id="packSidePanel">
+
+              <!-- Sticky: pack seleccionado + acciones globales -->
+              <div class="prop-sticky-head" id="packStickyHead" style="display:none">
+                <div class="prop-sticky-meta">
+                  <div class="prop-sticky-title" id="packStickyTitle">Pack</div>
+                  <div class="prop-sticky-sub" id="packStickySub"></div>
+                </div>
+                <div class="prop-sticky-actions">
+                  <button type="button" class="btn-secondary btn-sm" id="packEnableEditBtn">Editar todo</button>
+                  <button type="button" class="btn-secondary btn-sm" id="packCancelEditBtn" style="display:none">Cancelar</button>
+                </div>
+              </div>
+
+              <!-- Resumen editable (quick view) — el JS renderiza aquí -->
+              <div
+                id="packSummaryCard"
+                class="prop-summary"
+                style="display:none"
+                role="region"
+                aria-label="Resumen del pack (edición rápida)"
+              ></div>
+
+              <h3 id="packFormTitle">Nuevo pack</h3>
+
+              <form id="packForm">
+                <input type="hidden" id="packId" />
+
+                <!-- Campos completos (ocultos en modo resumen) -->
+                <div id="packFullFieldsBox">
+
+                  <section class="prop-edit-sec">
+                    <label>
+                      Nombre <br>
+                      <input type="text" id="packNombre" required />
+                    </label>
+                  </section>
+
+                  <section class="prop-edit-sec">
+                    <label>
+                      Ciudad <br>
+                      <input type="text" id="packCiudad" />
+                    </label>
+                    <label>
+                      Dirección <br>
+                      <input type="text" id="packDireccion" />
+                    </label>
+                  </section>
+
+                  <section class="prop-edit-sec">
+                    <div class="row">
+                      <label>
+                        Capacidad total
+                        <input type="number" id="packCapacidad" min="1" />
+                      </label>
+                      <label>
+                        Dormitorios
+                        <input type="number" id="packDormitorios" min="0" />
+                      </label>
+                      <label>
+                        Baños
+                        <input type="number" id="packBanos" min="0" />
+                      </label>
+                    </div>
+                  </section>
+
+                  <section class="prop-edit-sec">
+                    <label>
+                      Descripción corta
+                      <textarea id="packDescripcion" rows="2"></textarea>
+                    </label>
+                    <label>
+                      Descripción larga
+                      <textarea id="packDescripcionLarga" rows="4"></textarea>
+                    </label>
+                    <label>
+                      Tagline (frase corta)
+                      <input type="text" id="packTagline" placeholder="La experiencia completa para grupos" />
+                    </label>
+                    <label>
+                      Highlights (uno por línea)
+                      <textarea id="packHighlights" rows="4" placeholder="Ambos apartamentos&#10;Piscina compartida&#10;Cocina equipada"></textarea>
+                    </label>
+                    <label>
+                      Normas del alojamiento
+                      <textarea id="packNormas" rows="4" placeholder="No fumar. No mascotas. Silencio a partir de..."></textarea>
+                    </label>
+                  </section>
+
+                  <section class="prop-edit-sec">
+                    <div class="row">
+                      <label>
+                        Porcentaje del pack (%)
+                        <input type="number" id="packPct" min="1" max="100" step="1" value="85" />
+                      </label>
+                      <label>
+                        Precio calculado / noche (€)
+                        <input type="number" id="packCalcPrecio" readonly tabindex="-1" placeholder="—" style="background:#f5f5f5;cursor:default" />
+                      </label>
+                      <label>
+                        Estancia mínima (noches)
+                        <input type="number" id="packMinNights" min="1" step="1" value="1" />
+                      </label>
+                      <label class="checkbox-label">
+                        <input type="checkbox" id="packActiva" />
+                        Activo
+                      </label>
+                    </div>
+                  </section>
+
+                  <section class="prop-edit-sec">
+                    <label>
+                      Servicios (separados por comas)
+                      <input type="text" id="packServicios" placeholder="Wi-Fi, Parking, Desayuno..." />
+                    </label>
+                  </section>
+
+                  <section class="prop-edit-sec">
+                    <label>
+                      Grupo / etiqueta
+                      <input type="text" id="packGroupKey" placeholder="Ej. Rendona 17" />
+                    </label>
+                  </section>
+
+                  <section class="prop-edit-sec">
+                    <label>
+                      Apartamentos del pack (IDs separados por comas)
+                      <input type="text" id="packSourceProperties" placeholder="rendona-1, rendona-2" />
+                    </label>
+                  </section>
+
+                </div>
+
+                <!-- Editor de fotos -->
+                <div id="packPhotoEditorBox">
+                  <hr style="margin: 0.75rem 0;" />
+                  <label>
+                    Fotos del pack
+                    <input type="file" id="packPhotos" accept="image/*" multiple />
+                  </label>
+                  <div id="packPhotoPreview" class="photo-grid"></div>
+                  <p class="muted">
+                    Puedes subir varias imágenes. Se guardan al pulsar "Guardar".
+                  </p>
+                </div>
+
+                <!-- Acciones (solo en edición completa o nuevo) -->
+                <div id="packFullActionsBox">
+                  <div class="form-actions form-actions-split">
+                    <div class="form-actions-left">
+                      <button type="submit" class="btn-primary">Guardar</button>
+                      <button type="button" id="resetPackFormBtn" class="btn-secondary">Nuevo</button>
+                    </div>
+                    <div class="form-actions-right">
+                      <button
+                        type="button"
+                        id="deletePackBtn"
+                        class="btn-danger"
+                        style="display:none"
+                      >
+                        Eliminar pack
+                      </button>
+                    </div>
+                  </div>
+                  <p id="packFormMessage" class="info-msg"></p>
+                </div>
+
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- =======================
+           PLACEHOLDERS (Booking-like)
+      ======================== -->
+      <section id="tab-ganancias" class="tab-content">
+        <div id="gananciasRoot"></div>
+      </section>
+
+      <section id="tab-comentarios" class="tab-content">
+        <div id="comentariosRoot"></div>
+      </section>
+
+      <!-- =======================
+           REGISTRO DE VIAJEROS
+      ======================== -->
+      <section id="tab-registroViajeros" class="tab-content">
+        <!-- El módulo registro-viajeros-ui.js renderiza el contenido aquí -->
+      </section>
+
+      <section id="tab-oportunidades" class="tab-content">
+        <div class="card">
+          <h2>Centro de oportunidades de grupo</h2>
+          <p class="muted">Sección preparada.</p>
+        </div>
+      </section>
+
+      <section id="tab-mercado" class="tab-content">
+        <div class="card">
+          <h2>Datos clave del mercado</h2>
+          <p class="muted">Sección preparada.</p>
+        </div>
+      </section>
+
+    </section>
+  </main>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+
+  <!-- Tu config Firebase -->
+  <script type="module" src="../shared/env.js"></script>
+  <script type="module" src="../shared/firebase.js"></script>
+  <script type="module" src="./app-intranet.js"></script>
+</body>
+</html>

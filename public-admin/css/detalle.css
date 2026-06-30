@@ -1,0 +1,632 @@
+/* =========================
+   LEGACY (no lo rompo)
+   ========================= */
+
+/* Galería: que la columna derecha no recorte */
+.gallery-grid{
+  overflow: hidden;
+}
+
+/* Mantén altura fija, pero que las filas se adapten */
+.gallery-side{
+  height: 320px;
+  padding: 10px;
+  gap: 10px;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+}
+
+/* Thumb ocupa la fila completa sin alturas fijas */
+.gallery-thumb{
+  height: auto;
+  min-height: 0;
+}
+.gallery-thumb img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* =========================
+   FIX LAYOUT SIDEBAR (precio / reservar)
+   - Evita que se vaya fuera a la derecha
+   - Responsive: en pantallas medianas baja debajo
+   ========================= */
+
+.detail-layout{
+  display: block;
+}
+.detail-main{
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 1120px){
+  .detail-layout{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   ANIMACIONES / MICRO
+   ========================= */
+
+.fade-in{
+  opacity: 0;
+  transform: translateY(14px);
+  animation: fadeUp .75s ease forwards;
+}
+@keyframes fadeUp{
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================
+   INLINE LUXURY CAROUSEL
+   - NO recorta: imagen principal en contain
+   - Fondo blur para que quede "full bleed" y luxe
+   ========================= */
+
+.inline-gallery{
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.inline-hero{
+  position: relative;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,.14);
+  background: #101010;
+}
+
+/* fondo blur */
+.inline-hero-bg{
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(26px);
+  transform: scale(1.14);
+  opacity: .45;
+}
+
+/* imagen principal: NO cortar */
+.inline-hero img{
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 520px;
+  object-fit: contain; /* 👈 clave: no recorta */
+  display: block;
+  cursor: pointer;
+  transform: scale(1);
+  transition: transform .9s ease;
+}
+
+/* hover muy sutil (sin recortar) */
+.inline-hero:hover img{
+  transform: scale(1.01);
+}
+
+.inline-nav{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.55);
+  color: #fff;
+  font-weight: 900;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 4;
+  backdrop-filter: blur(6px);
+}
+
+.inline-prev{ left: 16px; }
+.inline-next{ right: 16px; }
+
+.inline-overlay{
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 12px;
+  z-index: 3;
+  background: linear-gradient(to top, rgba(0,0,0,.62), rgba(0,0,0,0));
+}
+
+.inline-count{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.55);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  border: 1px solid rgba(255,255,255,.14);
+  backdrop-filter: blur(6px);
+}
+
+.inline-open{
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.10);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: .25s ease;
+}
+.inline-open:hover{
+  background: rgba(209,176,107,.95);
+  border-color: rgba(209,176,107,.95);
+  color: #111;
+}
+
+.inline-thumbs{
+  display: flex;
+  gap: 12px;
+  padding: 14px 14px 16px 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  background: rgba(255,255,255,.02);
+}
+
+.inline-thumb{
+  flex: 0 0 auto;
+  width: 116px;
+  height: 84px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  opacity: .70;
+  scroll-snap-align: center;
+  background: rgba(255,255,255,.06);
+  transition: .25s ease;
+  padding: 0;
+}
+.inline-thumb img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.inline-thumb.active{
+  opacity: 1;
+  border-color: rgba(209,176,107,.95);
+}
+
+/* =========================
+   META / DESCRIPTION tidy
+   ========================= */
+
+.detail-meta{
+  margin-top: 16px;
+}
+.detail-address{
+  color:#555;
+  font-size:14px;
+}
+
+/* override inline description styling */
+.detail-description{
+  margin-top: 18px;
+}
+.detail-description h3{
+  margin: 0 0 8px 0;
+}
+.detail-description p{
+  color:#333;
+  line-height:1.55;
+  margin:0;
+}
+
+/* =========================
+   Lightbox / Carrusel (modal)
+   ========================= */
+.gallery-lightbox{
+  position: fixed;
+  inset: 0;
+  background: rgba(10,10,10,.78);
+  backdrop-filter: blur(10px);
+  display: none;
+  z-index: 9999;
+  padding: 18px;
+}
+
+.gallery-lightbox.open{
+  display: grid;
+  place-items: center;
+}
+
+.gallery-lightbox .lb-box{
+  width: min(1100px, 96vw);
+  height: min(720px, 86vh);
+  background: rgba(20,20,20,.92);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 18px;
+  box-shadow: 0 20px 80px rgba(0,0,0,.45);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.gallery-lightbox .lb-top{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  color: #fff;
+}
+
+.gallery-lightbox .lb-count{
+  font-weight: 900;
+  font-size: 13px;
+  opacity: .9;
+}
+
+.gallery-lightbox .lb-close{
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.gallery-lightbox .lb-stage{
+  position: relative;
+  display: grid;
+  place-items: center;
+  background: rgba(0,0,0,.35);
+}
+
+.gallery-lightbox .lb-img{
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+  opacity: 1;
+}
+
+.gallery-lightbox .lb-nav{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.10);
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.gallery-lightbox .lb-prev{ left: 12px; }
+.gallery-lightbox .lb-next{ right: 12px; }
+
+.gallery-lightbox .lb-bottom{
+  padding: 10px 12px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  background: rgba(255,255,255,.04);
+  border-top: 1px solid rgba(255,255,255,.10);
+}
+
+.gallery-lightbox .lb-thumb{
+  width: 72px;
+  height: 54px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  flex: 0 0 auto;
+  background: rgba(255,255,255,.06);
+}
+
+.gallery-lightbox .lb-thumb img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gallery-lightbox .lb-thumb.active{
+  border-color: rgba(209,176,107,.95);
+}
+
+/* =========================
+   MAPA LUXURY OSCURO (inline)
+   ========================= */
+
+.detail-location-inline{
+  margin-top: 26px;
+}
+
+.detail-location-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.detail-location-head h3{
+  margin:0;
+}
+
+.detail-map-wrap{
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 20px 70px rgba(0,0,0,.18);
+}
+
+.detail-map{
+  width: 100%;
+  height: 420px;
+  border-radius: 24px;
+}
+
+.map-external-btn{
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.72);
+  border: 1px solid rgba(255,255,255,.12);
+  color: #fff;
+  text-decoration:none;
+  font-size: 13px;
+  font-weight: 800;
+  backdrop-filter: blur(8px);
+  transition: .25s ease;
+}
+
+.map-external-btn:hover{
+  background: rgba(209,176,107,.95);
+  border-color: rgba(209,176,107,.95);
+  color: #111;
+}
+
+/* Glow overlay (sutil) */
+.map-glow{
+  pointer-events:none;
+  position:absolute;
+  inset:0;
+  background: radial-gradient(circle at 40% 40%, rgba(209,176,107,.12), rgba(0,0,0,0) 55%);
+  mix-blend-mode: screen;
+}
+
+.map-disclaimer{
+  margin-top: 10px;
+  font-size: 13px;
+  color: #666;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 820px){
+  .inline-hero img{ height: 380px; }
+  .inline-thumb{ width: 96px; height: 72px; }
+  .detail-map{ height: 340px; }
+  .inline-nav{ width: 40px; height: 40px; }
+}
+
+@media (max-width: 520px){
+  .inline-hero img{ height: 320px; }
+  .inline-prev{ left: 10px; }
+  .inline-next{ right: 10px; }
+  .inline-overlay{ padding: 12px; }
+  .inline-open{ padding: 8px 12px; font-size: 12px; }
+  .inline-count{ font-size: 12px; }
+}
+
+/* =========================
+   BOOKING BAR (CTA bajo galería)
+   ========================= */
+
+.booking-bar{
+  margin-top: 16px;
+  padding: 18px 18px;
+  border-radius: 22px;
+  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(0,0,0,.06);
+  box-shadow: 0 18px 55px rgba(0,0,0,.10);
+  display: grid;
+  grid-template-columns: 220px 1fr 260px;
+  gap: 18px;
+  align-items: center;
+}
+
+.booking-bar__left .price-big{
+  font-size: 34px;
+  font-weight: 900;
+  line-height: 1;
+}
+.booking-bar__left .price-small{
+  margin-top: 4px;
+  opacity: .75;
+}
+.booking-type{
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  opacity: .55;
+}
+
+.booking-perks{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.perk{
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.045);
+  border: 1px solid rgba(0,0,0,.06);
+  font-size: 13px;
+  font-weight: 800;
+  color: #1b1b1b;
+}
+
+.booking-hint{
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(0,0,0,.55);
+}
+
+.booking-bar__right{
+  display: grid;
+  gap: 8px;
+  justify-items: stretch;
+}
+
+.cta-btn--primary{
+  width: 100%;
+  height: 52px;
+  border-radius: 999px;
+  font-weight: 900;
+  letter-spacing: .01em;
+  border: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 18px 45px rgba(0,0,0,.12);
+  transform: translateY(0);
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+.cta-btn--primary:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 22px 60px rgba(0,0,0,.16);
+  filter: saturate(1.05);
+}
+.cta-btn--primary:active{
+  transform: translateY(0);
+  box-shadow: 0 14px 36px rgba(0,0,0,.12);
+}
+
+.cta-subtle{
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  opacity: .6;
+}
+
+/* Responsive */
+@media (max-width: 980px){
+  .booking-bar{
+    grid-template-columns: 1fr;
+  }
+  .booking-bar__right{
+    grid-auto-flow: row;
+  }
+  .booking-bar__left{
+    display:flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .booking-type{ width: 100%; }
+}
+
+.calendar-layout{
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 18px;
+  align-items: start;
+}
+
+.calendar-side{
+  position: sticky;
+  top: 18px;
+}
+
+.reserve-summary{
+  border-radius: 22px;
+  background: rgba(255,255,255,.90);
+  border: 1px solid rgba(0,0,0,.06);
+  box-shadow: 0 18px 55px rgba(0,0,0,.10);
+  padding: 16px;
+}
+
+.reserve-summary__title{
+  margin: 0 0 12px 0;
+  font-size: 18px;
+}
+
+.reserve-summary__prop{
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(0,0,0,.03);
+  border: 1px solid rgba(0,0,0,.05);
+}
+
+.reserve-summary__img{
+  width: 74px;
+  height: 54px;
+  border-radius: 12px;
+  background: #ddd center/cover no-repeat;
+}
+
+.reserve-summary__name{ font-weight: 900; }
+.reserve-summary__meta{ margin-top: 2px; font-size: 13px; opacity: .7; }
+
+.reserve-summary__rows{
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.reserve-summary__rows .row{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  padding: 10px 10px;
+  border-radius: 14px;
+  background: rgba(0,0,0,.02);
+  border: 1px solid rgba(0,0,0,.05);
+}
+
+.reserve-summary__total{
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0,0,0,.08);
+  display:flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.reserve-summary__total strong{ font-size: 18px; }
+
+.reserve-summary__fineprint{
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: .65;
+  line-height: 1.35;
+}
+
+/* responsive */
+@media (max-width: 980px){
+  .calendar-layout{ grid-template-columns: 1fr; }
+  .calendar-side{ position: static; }
+}

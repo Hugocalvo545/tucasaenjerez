@@ -1,0 +1,24 @@
+{
+  "name": "JLA Apartments",
+  "short_name": "JLA",
+  "description": "Plataforma de reserva de apartamentos vacacionales",
+  "start_url": "/multi/",
+  "display": "standalone",
+  "background_color": "#F7F4EE",
+  "theme_color": "#C9A96A",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

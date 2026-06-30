@@ -1,0 +1,184 @@
+<!-- multi/pago-ok.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reserva confirmada · Alojamientos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="../img/Logo-JLA.jpg">
+  <!-- Design system base (tokens + componentes) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/design-system.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/multi-overrides.css">
+  <!-- Nav superior única consolidada (cargar DESPUÉS de multi-overrides.css) -->
+  <link rel="stylesheet" href="../css/multi-nav.css">
+  <style>
+    .pago-ok-wrap  { max-width: 540px; margin: 60px auto; padding: 0 16px; text-align: center; }
+    .pago-ok-icon  { font-size: 64px; margin-bottom: 16px; }
+    .pago-ok-detail {
+      background: #fbf7ee;
+      border: 1px solid rgba(243,198,105,.55);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin: 20px 0;
+      text-align: left;
+    }
+    .pago-ok-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+    .pago-ok-spinner {
+      display: inline-block;
+      width: 36px; height: 36px;
+      border: 3px solid #e0e0e0;
+      border-top-color: #1a8b7d;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.21.0/dist/tabler-icons.min.css">
+</head>
+<body>
+
+  <!-- =======================
+       TOPBAR (nav única, idéntica a index/detalle/checkout)
+       Sin is-active en esta página. El enlace "Inicio" conserva
+       .multi-topbar-back: la lógica SSO (querySelector('.multi-topbar-back'))
+       reescribe su href con el token jla_user.
+  ======================== -->
+  <header class="multi-topbar">
+    <a class="multi-brand" href="https://tucasaenjerez.com/" aria-label="Tu Casa en Jerez">
+      <i class="ti ti-building-community multi-brand__icon"></i>
+      <span class="multi-brand__text">Tu Casa en Jerez</span>
+    </a>
+    <nav class="multi-nav" aria-label="Navegación principal">
+      <!-- PRODUCCIÓN: enlace externo a la web principal (mantiene SSO via .multi-topbar-back) -->
+      <a class="multi-nav__link multi-topbar-back" href="https://tucasaenjerez.com/" aria-label="Inicio">
+        <i class="ti ti-home" aria-hidden="true"></i><span>Inicio</span>
+      </a>
+      <a class="multi-nav__link" href="./index.html" aria-label="Apartamentos">
+        <i class="ti ti-building" aria-hidden="true"></i><span>Apartamentos</span>
+      </a>
+      <a class="multi-nav__link" href="../perfil/index-usuario.html#reservas" aria-label="Reservas">
+        <i class="ti ti-calendar-event" aria-hidden="true"></i><span>Reservas</span>
+      </a>
+      <a class="multi-nav__link" href="../perfil/index-usuario.html" aria-label="Perfil">
+        <i class="ti ti-user" aria-hidden="true"></i><span>Perfil</span>
+      </a>
+    </nav>
+  </header>
+
+  <div class="pago-ok-wrap">
+    <div id="pagoOkSpinner" class="pago-ok-spinner"></div>
+    <div id="pagoOkIcon"    class="pago-ok-icon"    style="display:none;"></div>
+
+    <h2 id="pagoOkTitle">Confirmando reserva…</h2>
+    <p  id="pagoOkMsg"   style="color:#666; margin-top:8px;">Estamos verificando tu pago. Un momento.</p>
+
+    <div id="pagoOkDetail" class="pago-ok-detail" style="display:none;"></div>
+
+    <div id="pagoOkActions" class="pago-ok-actions" style="display:none;">
+      <a href="./index.html"                    class="btn-secondary">Ver alojamientos</a>
+      <a href="../perfil/index-usuario.html"    class="btn-primary">Mis reservas</a>
+    </div>
+  </div>
+
+  <!-- FIREBASE COMPAT -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+
+  <!-- ENV -->
+  <script src="../shared/env.js"></script>
+
+  <script type="module">
+    import { db, auth } from '../shared/firebase.js';
+
+    const params    = new URLSearchParams(window.location.search);
+    const reservaId = params.get('reservaId');
+
+    const elSpinner = document.getElementById('pagoOkSpinner');
+    const elIcon    = document.getElementById('pagoOkIcon');
+    const elTitle   = document.getElementById('pagoOkTitle');
+    const elMsg     = document.getElementById('pagoOkMsg');
+    const elDetail  = document.getElementById('pagoOkDetail');
+    const elActions = document.getElementById('pagoOkActions');
+
+    function showSuccess(data) {
+      elSpinner.style.display = 'none';
+      elIcon.textContent = '✅';
+      elIcon.style.display = 'block';
+      elTitle.textContent = '¡Reserva confirmada!';
+      elMsg.textContent   = 'Tu pago se ha procesado correctamente. Te hemos enviado un email de confirmación.';
+
+      if (data) {
+        const ni = Number(data.numChildren) || 0;
+        elDetail.innerHTML = `
+          <div style="font-weight:800;font-size:1.05rem;margin-bottom:8px;">${data.propertyName || ''}</div>
+          <div>📅 ${data.checkIn} &rarr; ${data.checkOut} &middot; ${data.nights} noche${data.nights !== 1 ? 's' : ''}</div>
+          <div style="margin-top:4px;">
+            👥 ${data.numAdults} adulto${data.numAdults !== 1 ? 's' : ''}${ni ? ` &middot; ${ni} niño${ni !== 1 ? 's' : ''}` : ''}
+          </div>
+          <div style="font-weight:900;font-size:1.05rem;margin-top:10px;">Total: ${Number(data.totalPrice).toFixed(2)} €</div>
+          <div style="font-size:12px;color:#888;margin-top:8px;">Ref: ${data.reservaId || reservaId}</div>
+        `;
+        elDetail.style.display = 'block';
+      }
+
+      elActions.style.display = 'flex';
+    }
+
+    function showGenericSuccess() {
+      elSpinner.style.display = 'none';
+      elIcon.textContent = '✅';
+      elIcon.style.display = 'block';
+      elTitle.textContent = '¡Reserva confirmada!';
+      elMsg.textContent   = 'Tu pago se ha procesado correctamente. Recibirás un email de confirmación en breve.';
+      elActions.style.display = 'flex';
+    }
+
+    // Espera a que el webhook escriba en reservas (normalmente < 2 s).
+    // Si tras MAX intentos no existe, muestra confirmación genérica.
+    async function pollForReservation() {
+      if (!reservaId) { showGenericSuccess(); return; }
+
+      const MAX      = 6;
+      const DELAY_MS = 1500;
+
+      for (let i = 0; i < MAX; i++) {
+        try {
+          const snap = await db.collection('reservas').doc(reservaId).get();
+          if (snap.exists) { showSuccess(snap.data()); return; }
+        } catch (_) {}
+
+        if (i < MAX - 1) await new Promise(r => setTimeout(r, DELAY_MS));
+      }
+
+      showGenericSuccess();
+    }
+
+    // Iniciamos el polling una sola vez cuando Firebase resuelve el estado de auth
+    let started = false;
+    auth.onAuthStateChanged((user) => {
+      const backLink = document.querySelector('.multi-topbar-back');
+      if (backLink) {
+        // PRODUCCIÓN: URL → cambiar al dominio WordPress real
+      const base = 'https://tucasaenjerez.com/';
+        if (user) {
+          const info = btoa(JSON.stringify({ email: user.email, name: user.displayName || user.email, exp: Date.now() + 30 * 60 * 1000 }));
+          backLink.href = base + '?jla_user=' + info;
+        } else {
+          backLink.href = base;
+        }
+      }
+      if (started) return;
+      started = true;
+      pollForReservation();
+    });
+  </script>
+
+</body>
+</html>

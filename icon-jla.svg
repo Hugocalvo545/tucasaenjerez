@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Fondo cuadrado redondeado para PWA -->
+  <rect width="200" height="200" rx="40" fill="#1a1e2e"/>
+  
+  <!-- Escudo exterior -->
+  <path d="M100 22 L162 46 L162 112 Q162 158 100 178 Q38 158 38 112 L38 46 Z"
+        fill="#1a1e2e" stroke="#C9A96E" stroke-width="4"/>
+  
+  <!-- Escudo interior decorativo -->
+  <path d="M100 34 L150 54 L150 112 Q150 148 100 165 Q50 148 50 112 L50 54 Z"
+        fill="none" stroke="#C9A96E" stroke-width="1.5" opacity="0.25"/>
+
+  <!-- JLA -->
+  <text x="100" y="118"
+        text-anchor="middle"
+        font-family="Georgia, serif"
+        font-size="48"
+        font-weight="700"
+        fill="#C9A96E"
+        letter-spacing="3">JLA</text>
+
+  <!-- Separador -->
+  <line x1="56" y1="128" x2="144" y2="128" stroke="#C9A96E" stroke-width="1.5" opacity="0.45"/>
+
+  <!-- APARTMENTS -->
+  <text x="100" y="146"
+        text-anchor="middle"
+        font-family="Georgia, serif"
+        font-size="13"
+        fill="#C9A96E"
+        opacity="0.7"
+        letter-spacing="4">APARTMENTS</text>
+</svg>

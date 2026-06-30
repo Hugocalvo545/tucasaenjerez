@@ -1,0 +1,783 @@
+<!-- perfil/index-usuario.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mi cuenta · JLA Apartments</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="../img/Logo-JLA.jpg">
+  <!-- Design system base (tokens + componentes) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/design-system.css">
+  <!-- CSS -->
+  <link rel="stylesheet" href="../css/styles.css">
+  <!-- Nav superior única consolidada (compartida con multi/*.html) -->
+  <link rel="stylesheet" href="../css/multi-nav.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.21.0/dist/tabler-icons.min.css">
+</head>
+<body>
+  <!-- =======================
+       TOPBAR (nav única)
+  ======================== -->
+  <header class="multi-topbar">
+    <a class="multi-brand" href="https://tucasaenjerez.com/" aria-label="Tu Casa en Jerez">
+      <i class="ti ti-building-community multi-brand__icon"></i>
+      <span class="multi-brand__text">Tu Casa en Jerez</span>
+    </a>
+    <nav class="multi-nav" aria-label="Navegación principal">
+      <a class="multi-nav__link" href="https://tucasaenjerez.com/" aria-label="Inicio">
+        <i class="ti ti-home" aria-hidden="true"></i><span>Inicio</span>
+      </a>
+      <a class="multi-nav__link" href="../multi/index.html" aria-label="Apartamentos">
+        <i class="ti ti-building" aria-hidden="true"></i><span>Apartamentos</span>
+      </a>
+      <a class="multi-nav__link" data-nav="reservas" href="./index-usuario.html#reservas" aria-label="Reservas">
+        <i class="ti ti-calendar-event" aria-hidden="true"></i><span>Reservas</span>
+      </a>
+      <a class="multi-nav__link" data-nav="perfil" href="./index-usuario.html" aria-label="Perfil">
+        <i class="ti ti-user" aria-hidden="true"></i><span>Perfil</span>
+      </a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div class="form-column">
+      <!-- LOGIN SCREEN -->
+      <div class="login-screen active" id="loginScreen">
+        <div class="login-header">
+          <h1>Bienvenido</h1>
+          <p>Gestiona tus estancias, puntos y reservas en un solo lugar.</p>
+        </div>
+
+        <div class="login-tabs">
+          <button class="login-tab active" onclick="switchTab('login')">Iniciar sesión</button>
+          <button class="login-tab" onclick="switchTab('register')">Crear cuenta</button>
+        </div>
+
+        <div id="loginTab" class="login-form active">
+          <form id="loginForm">
+            <div class="form-group">
+              <label>Email <span class="required">*</span></label>
+              <input type="email" id="loginEmail" required placeholder="tu@email.com">
+            </div>
+            <div class="form-group">
+              <label>Contraseña <span class="required">*</span></label>
+              <input type="password" id="loginPassword" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%;">Iniciar Sesión</button>
+            <div id="loginMessage"></div>
+          </form>
+        </div>
+
+        <div id="registerTab" class="login-form">
+          <div class="step-indicator">
+            <div class="step active" id="regStep1">1</div>
+            <div class="step-line active" id="regLine"></div>
+            <div class="step inactive" id="regStep2">2</div>
+          </div>
+
+          <div id="regStep1Form" class="step-content active">
+            <h2>Crea tu cuenta</h2>
+            <p class="muted" style="margin-bottom:12px; font-size:0.9rem;">
+              Tendrás tu área privada para ver reservas, hablar con el alojamiento y acumular puntos en cada estancia.
+            </p>
+            <form>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Nombre <span class="required">*</span></label>
+                  <input type="text" id="regName" required placeholder="Juan">
+                </div>
+                <div class="form-group">
+                  <label>Apellidos <span class="required">*</span></label>
+                  <input type="text" id="regSurname" required placeholder="García López">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Email <span class="required">*</span></label>
+                <input type="email" id="regEmail" required placeholder="tu@email.com">
+              </div>
+              <div class="form-group">
+                <label>Teléfono <span class="required">*</span></label>
+                <input type="tel" id="regPhone" required placeholder="+34 612 345 678">
+              </div>
+              <div class="form-group">
+                <label>Contraseña <span class="required">*</span></label>
+                <input type="password" id="regPassword" required placeholder="Mínimo 8 caracteres">
+              </div>
+              <div class="form-group">
+                <label>Confirmar Contraseña <span class="required">*</span></label>
+                <input type="password" id="regPasswordConfirm" required placeholder="Confirma">
+              </div>
+              <button type="button" class="btn-primary" style="width: 100%;" onclick="regNextStep()">Continuar →</button>
+              <div id="regStep1Message"></div>
+            </form>
+          </div>
+
+          <div id="regStep2Form" class="step-content">
+            <h2>Completa tus Datos</h2>
+            <p class="muted" style="margin-bottom:12px; font-size:0.9rem;">
+              Solo te pediremos estos datos una vez. Te servirán para futuras reservas y para cumplir con la normativa de huéspedes.
+            </p>
+            <form id="registerForm">
+              <h3>Datos de Identidad</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Tipo de Documento <span class="required">*</span></label>
+                  <select id="docType" required>
+                    <option value="">Selecciona</option>
+                    <option value="DNI">DNI</option>
+                    <option value="NIE">NIE</option>
+                    <option value="Pasaporte">Pasaporte</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Número <span class="required">*</span></label>
+                  <input type="text" id="docNumber" required placeholder="12345678A">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Nacionalidad <span class="required">*</span></label>
+                <select id="nationality" required>
+                  <option value="">Selecciona</option>
+                  <option value="Española">Española</option>
+                  <option value="Otra">Otra</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Fecha de Nacimiento <span class="required">*</span></label>
+                <div class="date-group">
+                  <div>
+                    <input type="number" id="birthDay" min="1" max="31" required placeholder="Día">
+                    <div class="date-label">Día</div>
+                  </div>
+                  <div>
+                    <select id="birthMonth" required>
+                      <option value="">Mes</option>
+                      <option value="01">Enero</option>
+                      <option value="02">Febrero</option>
+                      <option value="03">Marzo</option>
+                      <option value="04">Abril</option>
+                      <option value="05">Mayo</option>
+                      <option value="06">Junio</option>
+                      <option value="07">Julio</option>
+                      <option value="08">Agosto</option>
+                      <option value="09">Septiembre</option>
+                      <option value="10">Octubre</option>
+                      <option value="11">Noviembre</option>
+                      <option value="12">Diciembre</option>
+                    </select>
+                    <div class="date-label">Mes</div>
+                  </div>
+                  <div>
+                    <input type="number" id="birthYear" min="1900" max="2025" required placeholder="2000">
+                    <div class="date-label">Año</div>
+                  </div>
+                </div>
+              </div>
+
+              <h3>Dirección</h3>
+              <div class="form-group">
+                <label>País <span class="required">*</span></label>
+                <select id="country" required>
+                  <option value="">Selecciona</option>
+                  <option value="España">España</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+              <div class="form-group autocomplete-container">
+                <label>Dirección <span class="required">*</span></label>
+                <input type="text" id="address" required placeholder="Ej: Calle Gran Vía, 123" autocomplete="off">
+                <div class="autocomplete-list" id="addressList"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Ciudad <span class="required">*</span></label>
+                  <input type="text" id="city" required placeholder="Madrid">
+                </div>
+                <div class="form-group">
+                  <label>CP <span class="required">*</span></label>
+                  <input type="text" id="zipcode" required placeholder="28001">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Provincia</label>
+                <input type="text" id="province" placeholder="Madrid">
+              </div>
+
+              <div class="form-group">
+                <input type="checkbox" id="regTerms" required style="width: auto; margin-right: 8px;">
+                <label for="regTerms" style="display: inline; margin: 0;">Acepto términos</label>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="regPrevStep()">← Volver</button>
+                <button type="submit" class="btn-primary">Crear Cuenta</button>
+              </div>
+              <div id="registerMessage"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+
+            <!-- PROFILE SCREEN -->
+      <div class="profile-screen" id="profileScreen">
+        <div class="profile-topbar">
+          <button id="btnBackOrigin" class="btn-secondary" style="display:none;">
+            ← Volver
+          </button>
+
+          <div style="flex:1"></div>
+
+          <button class="btn-secondary" onclick="logout()">Cerrar sesión</button>
+        </div>
+
+        <!-- Menú de usuario -->
+        <nav class="user-tabs">
+          <button class="user-tab active" data-user-tab="resumen">Mis datos</button>
+          <button class="user-tab" data-user-tab="reservas">
+            Mis reservas y chat
+            <span id="userMsgBadge" class="nav-badge" style="display:none"></span>
+          </button>
+        </nav>
+
+        <!-- ===== TAB 1: MIS DATOS / RESUMEN ===== -->
+        <section id="userTab-resumen" class="user-tab-content active">
+          <div class="profile-header">
+            <h1 id="profileFullName"><span class="loading-spinner"></span>Cargando...</h1>
+            <p id="profileEmail">Cargando...</p>
+            <p class="muted" style="margin: 4px 0 10px; font-size: 0.9rem;">
+              Gestiona tus datos, revisa tus reservas y aprovecha tus ventajas como huésped frecuente.
+            </p>
+            <div class="level-badge">
+              <span id="levelBadge">Nivel 1 · Viajero</span>
+            </div>
+          </div>
+
+          <div class="level-card">
+            <h3>🏆 Tu nivel como viajero</h3>
+            <div class="level-number" id="levelNumber">1</div>
+            <div class="level-name" id="levelName">Cargando...</div>
+            <div class="level-progress">
+              <div class="level-progress-bar" id="levelProgressBar"></div>
+            </div>
+            <p class="muted" id="levelProgressText" style="margin: 6px 0 4px; font-size: 0.85rem;"></p>
+            <div class="discount-badge" id="discountBadge">Sin descuento aún</div>
+            <p class="muted" style="margin: 8px 0 0; font-size: 0.85rem;">
+              Cuantas más reservas completes, más sube tu nivel y mayores son tus descuentos en futuras estancias.
+            </p>
+          </div>
+
+          <div class="points-card">
+            <h3>Mis puntos ⭐</h3>
+            <div class="points-number" id="pointsDisplay">0</div>
+            <p style="margin: 0; font-size: 0.9rem;">
+              1 punto = 1 € gastado en reservas confirmadas.
+            </p>
+            <p class="muted" style="margin: 4px 0 0; font-size: 0.8rem;">
+              Tus puntos se acumulan automáticamente y se aplican como descuento según tu nivel.
+            </p>
+          </div>
+
+          <div class="profile-card">
+            <h3>👥 Mis compañeros de viaje</h3>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 12px;">
+              Guarda a tus acompañantes habituales para rellenar sus datos solo una vez y ahorrar tiempo en futuras reservas.
+            </p>
+            <div id="frecuentGuestsList"></div>
+            <button
+              class="btn-primary"
+              style="width: 100%; margin-top: 12px;"
+              onclick="openAddGuestModal()"
+            >
+              + Añadir huésped frecuente
+            </button>
+          </div>
+
+          <!-- READ-ONLY VIEW -->
+          <div id="profileInfoView">
+            <div class="profile-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <h3 style="margin:0;">Mis datos</h3>
+                <button type="button" class="btn-secondary" style="font-size:0.85rem;padding:6px 12px;" onclick="openProfileEdit()">Editar mis datos</button>
+              </div>
+              <div class="profile-row">
+                <span class="profile-label">Nombre:</span>
+                <span class="profile-value" id="pNombre">-</span>
+              </div>
+              <div class="profile-row">
+                <span class="profile-label">Email:</span>
+                <span class="profile-value" id="pEmail">-</span>
+              </div>
+              <div class="profile-row">
+                <span class="profile-label">Teléfono:</span>
+                <span class="profile-value" id="pPhone">-</span>
+              </div>
+              <div class="profile-row">
+                <span class="profile-label">Documento:</span>
+                <span class="profile-value">
+                  <span id="pDocType">-</span>
+                  <span id="pDocNumber">-</span>
+                </span>
+              </div>
+              <div class="profile-row">
+                <span class="profile-label">Nacionalidad:</span>
+                <span class="profile-value" id="pNationality">-</span>
+              </div>
+              <div class="profile-row">
+                <span class="profile-label">Nacimiento:</span>
+                <span class="profile-value" id="pBirthDate">-</span>
+              </div>
+              <div class="profile-row">
+                <span class="profile-label">País:</span>
+                <span class="profile-value" id="pCountry">-</span>
+              </div>
+              <div class="profile-row">
+                <span class="profile-label">Dirección:</span>
+                <span class="profile-value" id="pAddress">-</span>
+              </div>
+              <div class="profile-row">
+                <span class="profile-label">Ciudad:</span>
+                <span class="profile-value" id="pCity">-</span>
+              </div>
+              <div class="profile-row">
+                <span class="profile-label">CP:</span>
+                <span class="profile-value" id="pZipcode">-</span>
+              </div>
+              <div class="profile-row">
+                <span class="profile-label">Provincia:</span>
+                <span class="profile-value" id="pProvince">-</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- EDIT FORM (hidden by default) -->
+          <div id="profileEditCard" class="profile-card" style="display:none;">
+            <h3>Editar mis datos</h3>
+            <div id="profileEditMsg" style="margin-bottom:10px;font-size:0.9rem;"></div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nombre</label>
+                <input id="ep_name" type="text" placeholder="Juan">
+              </div>
+              <div class="form-group">
+                <label>Apellidos</label>
+                <input id="ep_surname" type="text" placeholder="García">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Email (no editable)</label>
+              <input id="ep_email" type="email" disabled style="background:#f5f5f5;cursor:default;">
+            </div>
+
+            <div class="form-group">
+              <label>Teléfono</label>
+              <input id="ep_phone" type="tel" placeholder="+34 600 000 000">
+            </div>
+
+            <div class="form-group">
+              <label>Fecha de nacimiento</label>
+              <input id="ep_birthDate" type="date">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tipo de documento</label>
+                <select id="ep_docType">
+                  <option value="DNI">DNI</option>
+                  <option value="NIE">NIE</option>
+                  <option value="Pasaporte">Pasaporte</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Número de documento</label>
+                <input id="ep_docNumber" type="text" placeholder="12345678A">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Nacionalidad</label>
+              <select id="ep_nationality">
+                <option value="Española">Española</option>
+                <option value="Otra">Otra</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>País</label>
+              <select id="ep_country">
+                <option value="España">España</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Dirección</label>
+              <input id="ep_address" type="text" placeholder="Calle Mayor, 1">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Ciudad</label>
+                <input id="ep_city" type="text" placeholder="Madrid">
+              </div>
+              <div class="form-group">
+                <label>Código postal</label>
+                <input id="ep_zipcode" type="text" placeholder="28001">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Provincia</label>
+              <input id="ep_province" type="text" placeholder="Madrid">
+            </div>
+
+            <div class="form-actions" style="margin-top:16px;">
+              <button type="button" class="btn-secondary" onclick="closeProfileEdit()">Cancelar</button>
+              <button type="button" class="btn-primary" id="saveProfileBtn" onclick="saveProfileEdit()">Guardar cambios</button>
+            </div>
+          </div>
+
+          <!-- SOLO próxima reserva visible aquí -->
+          <div class="profile-card">
+            <div class="bookings-header-toggle" onclick="toggleBookingsVisibility()">
+              <span>📅 Próxima reserva</span>
+              <small id="bookingsToggleLabel">(Ocultar)</small>
+            </div>
+
+            <p class="muted" style="font-size:0.85rem; margin:6px 0 8px;">
+              Aquí verás la próxima estancia que tienes con nosotros. El resto del historial y el chat están en la pestaña
+              <strong>“Mis reservas y chat”</strong>.
+            </p>
+
+            <!-- Próxima reserva destacada (la gestiona bookings.js) -->
+            <div id="nextBookingHighlight" class="next-booking"></div>
+
+            <!-- Estos dos bloques se dejan por compatibilidad con bookings.js, pero ocultos -->
+            <div class="bookings-search" style="display:none;">
+              <input
+                type="text"
+                id="bookingsSearchInput"
+                placeholder="Buscar por fecha o alojamiento..."
+                oninput="filterBookings()"
+              >
+            </div>
+
+            <div id="bookingsList" class="bookings-history" style="display:none;">
+              <p style="color:#999; text-align:center;">Cargando reservas...</p>
+            </div>
+          </div>
+
+          <button
+            class="btn-primary"
+            style="width: 100%; margin-top: 24px;"
+            onclick="goToMulti()"
+          >
+            Reservar una nueva estancia
+          </button>
+        </section>
+
+        <!-- ===== TAB 2: MIS RESERVAS + CHAT ===== -->
+        <section id="userTab-reservas" class="user-tab-content">
+          <div class="profile-card">
+            <h3>Mis reservas y chat</h3>
+            <p style="color:#666; font-size:0.9rem; margin-bottom:10px;">
+              Selecciona una reserva para ver el detalle y hablar directamente con el alojamiento desde el chat.
+            </p>
+
+            <div class="user-reservas-layout">
+              <!-- Lista de reservas para el chat -->
+              <div class="user-reservas-list">
+                <h4 style="margin-bottom:6px;">Reservas</h4>
+                <div class="user-reservas-filters">
+                <input
+                  type="text"
+                  id="userReservasSearchInput"
+                  placeholder="Buscar por alojamiento, fechas, estado o total…"
+                  autocomplete="off"
+                />
+
+                <select id="userReservasRangeSelect">
+                  <option value="all">Todas</option>
+                  <option value="future">Futuras</option>
+                  <option value="past">Pasadas</option>
+                </select>
+              </div>
+                <div id="userReservasInfo" class="muted" style="font-size:0.8rem; margin-bottom:4px;"></div>
+
+                <div class="table-wrapper">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Fecha</th>
+                        <th>Alojamiento</th>
+                        <th>Entrada</th>
+                        <th>Salida</th>
+                      </tr>
+                    </thead>
+                    <tbody id="userReservasBody">
+                      <!-- lo rellena user-area.js -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Detalle + chat -->
+              <div class="user-reservas-chat">
+                <h4 style="margin-bottom:6px;">Detalle y chat</h4>
+                <div id="userReservaDetail" class="reserva-detail muted">
+                  Selecciona una reserva en la lista para ver el detalle y hablar con el alojamiento por chat.
+                </div>
+
+                <div id="userChatSection" class="chat-section" style="display:none;">
+                  <div id="userChatMessages" class="chat-messages">
+                    <p class="muted">Cargando chat...</p>
+                  </div>
+
+                  <form id="userChatForm" class="chat-form">
+                    <input
+                      type="text"
+                      id="userChatInput"
+                      placeholder="Escribe un mensaje para el alojamiento..."
+                      autocomplete="off"
+                    />
+                    <button type="submit" class="btn-primary btn-sm">Enviar mensaje</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+  <!-- MODAL SELECCIONAR HUÉSPED FRECUENTE -->
+  <div class="modal" id="selectFrequentGuestModal">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="margin: 0;">Usar Huésped Frecuente</h3>
+        <button style="background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 0;" onclick="closeSelectGuestModal()">×</button>
+      </div>
+      <p style="color: #666; margin-bottom: 16px;">Selecciona un huésped para cargar sus datos automáticamente:</p>
+      <div id="frequentGuestsSelectList" style="max-height: 300px; overflow-y: auto;"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: Éxito -->
+  <div class="modal" id="successModal">
+    <div class="modal-content" style="text-align:center;max-width:520px;">
+      <h3>🎉 ¡Reserva confirmada!</h3>
+      <p style="margin:10px 0 6px 0;">
+        Ya está todo listo para tu próxima estancia. En unos momentos recibirás un email con los detalles.
+      </p>
+      <p id="pointsGained" style="margin:0 0 16px 0;color:#f3c669;font-weight:700;">
+        +0 ⭐ Puntos sumados a tu perfil
+      </p>
+      <div class="form-actions" style="justify-content:center;">
+        <!-- Grande, principal -->
+        <button class="btn-primary btn-lg btn-nowrap" onclick="goToProfile()">Ir a mi perfil</button>
+        <!-- Más pequeño: ver detalles -->
+        <button class="btn-secondary btn-sm btn-nowrap" onclick="viewLastBookingDetails()">
+          Ver detalles de la reserva
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Añadir huésped frecuente -->
+  <div class="modal" id="addGuestModal">
+    <div class="modal-content" style="max-width: 720px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+        <h3 style="margin:0;">Añadir huésped frecuente</h3>
+        <button
+          style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#888"
+          onclick="closeAddGuestModal()"
+        >×</button>
+      </div>
+
+      <form id="addGuestForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre <span class="required">*</span></label>
+            <input id="frequentGuestName" required />
+          </div>
+          <div class="form-group">
+            <label>Apellidos <span class="required">*</span></label>
+            <input id="frequentGuestSurname" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email <span class="required">*</span></label>
+            <input id="frequentGuestEmail" type="email" required />
+          </div>
+          <div class="form-group">
+            <label>Teléfono <span class="required">*</span></label>
+            <input id="frequentGuestPhone" type="tel" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tipo doc.</label>
+            <select id="frequentGuestDocType">
+              <option value="">Selecciona</option>
+              <option value="DNI">DNI</option>
+              <option value="NIE">NIE</option>
+              <option value="Pasaporte">Pasaporte</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Número</label>
+            <input id="frequentGuestDocNumber" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nacionalidad</label>
+            <input id="frequentGuestNationality" />
+          </div>
+          <div class="form-group">
+            <label>Nacimiento (DD/MM/YYYY)</label>
+            <input id="frequentGuestBirthDate" placeholder="01/01/1990" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>País</label>
+            <input id="frequentGuestCountry" placeholder="España" />
+          </div>
+
+          <div class="form-group autocomplete-container">
+            <label>Dirección</label>
+            <input id="frequentGuestAddress" autocomplete="off" />
+            <div class="autocomplete-list" id="frequentGuestAddressList"></div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Ciudad</label>
+            <input id="frequentGuestCity" />
+          </div>
+          <div class="form-group">
+            <label>CP</label>
+            <input id="frequentGuestZipcode" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Provincia</label>
+          <input id="frequentGuestProvince" />
+        </div>
+
+        <div class="form-actions" style="margin-top:12px;">
+          <button type="button" class="btn-secondary" onclick="closeAddGuestModal()">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DETALLE RESERVA -->
+    <div class="modal" id="bookingDetailsModal">
+        <div class="modal-content">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <h3 style="margin:0;color:#1a8b7d;font-size:1.05rem;">Detalle de la reserva</h3>
+            <button
+                onclick="closeBookingDetails()"
+                style="background:none;border:none;font-size:1.4rem;cursor:pointer;line-height:1;color:#888;padding:0 0 2px 0;">
+                ×
+            </button>
+            </div>
+
+            <div id="bookingDetailsContent"></div>
+
+            <div style="text-align:right;margin-top:14px;">
+            <button
+                onclick="closeBookingDetails()"
+                style="padding:7px 14px;border:none;border-radius:8px;font-size:0.85rem;font-weight:500;cursor:pointer;background:#1a8b7d;color:#fff;">
+                Cerrar
+            </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase compat -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    
+    <script>
+      window.GOOGLE_MAPS_KEY = "AIzaSyBu5wLUu6bovJKnFBmqIFXymF-9ShNwrcU";
+    </script>
+
+
+    <!-- Entrada única -->
+    <script src="../shared/env.js"></script>
+    <script type="module" src="./app.js"></script>
+    <script type="module" src="./user-area.js"></script>
+
+  <script>
+    // Activa la pestaña de usuario indicada (resumen / reservas)
+    function perfilSwitchTab(tab) {
+      var btn = document.querySelector('.user-tab[data-user-tab="' + tab + '"]');
+      if (btn) {
+        btn.click();
+        return true;
+      }
+      return false;
+    }
+
+    // Al llegar con #reservas, abre la sección de reservas del perfil.
+    // Si la pestaña aún no existe (login no resuelto), reintenta unas veces.
+    function perfilHandleReservasHash() {
+      if (window.location.hash !== '#reservas') return;
+      var attempts = 0;
+      (function tryOpen() {
+        var ok = perfilSwitchTab('reservas');
+        var section = document.getElementById('userTab-reservas');
+        if (ok) {
+          if (section && section.scrollIntoView) {
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+          return;
+        }
+        if (attempts++ < 20) setTimeout(tryOpen, 250);
+      })();
+    }
+
+    // Estado activo de la nav según el hash: #reservas → Reservas, sin hash → Perfil
+    function perfilUpdateActiveNav() {
+      var isReservas = window.location.hash === '#reservas';
+      document.querySelectorAll('.multi-nav__link[data-nav]').forEach(function (link) {
+        var active = (link.getAttribute('data-nav') === (isReservas ? 'reservas' : 'perfil'));
+        link.classList.toggle('is-active', active);
+        if (active) {
+          link.setAttribute('aria-current', 'page');
+        } else {
+          link.removeAttribute('aria-current');
+        }
+      });
+    }
+
+    function perfilOnHashChange() {
+      perfilUpdateActiveNav();
+      perfilHandleReservasHash();
+    }
+
+    window.addEventListener('hashchange', perfilOnHashChange);
+    window.addEventListener('load', perfilOnHashChange);
+    document.addEventListener('DOMContentLoaded', perfilOnHashChange);
+  </script>
+
+</body>
+</html>

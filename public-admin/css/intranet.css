@@ -1,0 +1,2274 @@
+/* =========================
+   INTRANET · Booking Style UI
+========================= */
+
+
+/* Scope total */
+.intranet {
+  background: #f4f6fb;
+  color: #1d2433;
+
+  --bkg-blue: #003580;
+  --bkg-blue-2: #005fa1;
+
+  --card: #ffffff;
+  --text: #1d2433;
+  --muted: #667085;
+
+  --line: #e6e9f1;
+
+  --btn-bg: #0071c2;
+  --btn-bg-h: #005fa1;
+  --btn-fg: #fff;
+
+  --radius: 14px;
+}
+
+
+/* =========================
+   TOPBAR
+========================= */
+.intranet .topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bkg-blue);
+  color: #fff;
+  padding: 0.75rem 1.25rem;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.intranet .topbar .logo {
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.intranet .topbar-right {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.intranet #userEmail{
+  max-width: 52vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.intranet #logoutBtn{ flex: 0 0 auto; }
+
+
+/* =========================
+   MAIN LAYOUT
+========================= */
+.intranet .main {
+  padding: 1.2rem;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+
+/* =========================
+   BOTONES
+========================= */
+.intranet .btn-primary,
+.intranet .btn-secondary {
+  border: none;
+  border-radius: 12px;
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform .05s ease, background .15s ease, opacity .15s ease;
+  user-select: none;
+
+  /* FIX look “fino” + consistencia */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.15;
+  min-height: 40px;
+  white-space: nowrap;
+}
+
+.intranet .btn-primary {
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+}
+
+.intranet .btn-primary:hover {
+  background: var(--btn-bg-h);
+}
+
+.intranet .btn-primary:active,
+.intranet .btn-secondary:active {
+  transform: scale(0.99);
+}
+
+.intranet .btn-secondary {
+  background: #eef1f7;
+  color: #2a3142;
+}
+
+.intranet .btn-secondary:hover {
+  background: #e4e8f2;
+}
+
+.intranet .btn-sm {
+  padding: 0.45rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  min-height: 34px;
+}
+
+.intranet .full {
+  width: 100%;
+}
+
+/* Focus bonito (accesibilidad) */
+.intranet button:focus-visible,
+.intranet a:focus-visible,
+.intranet input:focus-visible,
+.intranet textarea:focus-visible,
+.intranet select:focus-visible{
+  outline: 3px solid rgba(0,113,194,.25);
+  outline-offset: 2px;
+}
+
+
+/* =========================
+   CARD
+========================= */
+.intranet .card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  box-shadow: 0 6px 20px rgba(16, 24, 40, 0.06);
+  border: 1px solid rgba(230, 233, 241, 0.9);
+}
+
+.intranet .card-tight {
+  padding: 1rem;
+}
+
+/* Headers dentro de cards */
+.intranet .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 0.75rem;
+}
+
+.intranet h1, .intranet h2, .intranet h3 {
+  margin: 0;
+  color: var(--text);
+}
+
+.intranet .muted { color: var(--muted); }
+
+.intranet .error-msg {
+  color: #d92d20;
+  font-weight: 700;
+  margin-top: 0.5rem;
+}
+
+.intranet .info-msg {
+  color: #027a48;
+  font-weight: 700;
+  margin-top: 0.5rem;
+}
+
+
+/* =========================
+   FORMULARIOS
+========================= */
+.intranet label {
+  display: block;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin: 0.55rem 0 0.3rem;
+  color: #2a3142;
+}
+
+.intranet input[type="text"],
+.intranet input[type="email"],
+.intranet input[type="password"],
+.intranet input[type="number"],
+.intranet input[type="date"],
+.intranet select,
+.intranet textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.intranet input:focus,
+.intranet select:focus,
+.intranet textarea:focus {
+  border-color: rgba(0, 113, 194, 0.55);
+  box-shadow: 0 0 0 4px rgba(0, 113, 194, 0.12);
+}
+
+.intranet textarea { resize: vertical; }
+
+.intranet .row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.intranet .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 1rem;
+  font-weight: 800;
+}
+
+
+/* =========================
+   TAB SYSTEM
+========================= */
+.intranet .tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0 0 0.9rem 0;
+  flex-wrap: wrap;
+}
+
+.intranet .tab {
+  border: 1px solid rgba(230, 233, 241, 1);
+  background: #ffffff;
+  border-radius: 999px;
+  padding: 0.45rem 0.95rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #2a3142;
+}
+
+.intranet .tab.active {
+  background: var(--bkg-blue);
+  color: #fff;
+  border-color: rgba(0, 53, 128, 0.2);
+}
+
+.intranet .tab-content {
+  display: none;
+  margin-top: 0.5rem;
+}
+
+.intranet .tab-content.active { display: block; }
+
+
+/* =========================
+   Special Prices · Tabs internas
+========================= */
+.intranet .sp-tabs{
+  display:flex;
+  gap:.5rem;
+  margin: 0 0 .9rem 0;
+  flex-wrap: wrap;
+}
+
+.intranet .sp-tab{
+  border: 1px solid rgba(230, 233, 241, 1);
+  background: #ffffff;
+  border-radius: 999px;
+  padding: 0.45rem 0.95rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #2a3142;
+}
+
+.intranet .sp-tab.active{
+  background: var(--bkg-blue);
+  color: #fff;
+  border-color: rgba(0, 53, 128, 0.2);
+}
+
+.intranet .sp-tab-content{
+  display:none;
+  margin-top: .5rem;
+}
+
+.intranet .sp-tab-content.active{ display:block; }
+
+
+/* =========================
+   PAGE SYSTEM
+========================= */
+.intranet .page-view { display: none; }
+.intranet .page-view.active { display: block; }
+
+
+/* =========================
+   BOOKING-LIKE MENU (chips + dropdown)
+========================= */
+.intranet .bk-nav{ margin-bottom: 12px; }
+
+/* Importante: evita 100vw (scroll lateral fantasma) */
+.intranet .bk-nav{
+  width: 100%;
+  margin-left: 0;
+  padding: 0;
+}
+
+.intranet .bk-nav-left{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.intranet .bk-dropdown{
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.intranet .bk-dropbtn{
+  border: 1px solid rgba(230, 233, 241, 1);
+  background: #ffffff;
+  border-radius: 999px;
+  padding: 0.45rem 0.95rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #2a3142;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.intranet .bk-dropdown.is-open .bk-dropbtn{
+  background: var(--bkg-blue);
+  color: #fff;
+  border-color: rgba(0, 53, 128, 0.2);
+}
+
+.intranet .bk-dropmenu{
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 240px;
+  background: #fff;
+  border: 1px solid rgba(230, 233, 241, 1);
+  border-radius: 14px;
+  padding: 8px;
+  box-shadow: 0 16px 40px rgba(16, 24, 40, 0.12);
+  z-index: 999;
+}
+
+.intranet .bk-dropdown.is-open .bk-dropmenu{ display: block; }
+
+.intranet .bk-dropmenu button{
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  border-radius: 12px;
+  padding: 10px 10px;
+  cursor: pointer;
+  font-weight: 800;
+  color: #253044;
+}
+
+.intranet .bk-dropmenu button:hover{ background: #f2f5ff; }
+
+
+/* =========================
+   SPLIT LAYOUT
+========================= */
+.intranet .split {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.intranet .panel { min-width: 0; }
+
+
+/* =========================
+   TABLAS (base)
+========================= */
+.intranet .table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.intranet .table th,
+.intranet .table td {
+  padding: 0.65rem 0.6rem;
+  border-bottom: 1px solid #eef0f6;
+  vertical-align: top;
+  text-align: center;
+}
+
+.intranet .table th {
+  background: #f7f8fc;
+  font-weight: 900;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #4b5565;
+}
+
+.intranet .table tr:hover td { background: #f6f9ff; }
+
+
+/* =========================
+   ALOJAMIENTOS · LISTA (FIX móvil)
+========================= */
+/* Solo el panel de la izquierda (lista + calendario) puede scrollear en X */
+.intranet #tab-alojamientos .split > .panel:first-child{
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Última columna compacta */
+.intranet #tab-alojamientos .table th:last-child,
+.intranet #tab-alojamientos .table td:last-child{
+  width: 96px;
+  white-space: nowrap;
+}
+
+.intranet #tab-alojamientos .table td:last-child .btn-secondary{
+  padding: 0.35rem 0.55rem;
+  font-size: 0.85rem;
+  min-height: 32px;
+}
+
+/* Fila seleccionada (cuando eliges alojamiento) */
+.intranet #tab-alojamientos tr.is-selected td{
+  background: #eaf2ff;
+}
+
+
+/* =========================
+   ALOJAMIENTOS · PANEL LATERAL (no recortes)
+========================= */
+.intranet #propertySidePanel{
+  position: relative;
+  overflow: visible;
+}
+
+
+/* =========================
+   ALOJAMIENTOS · STICKY seleccionado (FIX: no se corta)
+========================= */
+.intranet .prop-sticky-head{
+  top: 62px; /* debajo de la topbar en móvil/tablet */
+  z-index: 250;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  margin: 0 0 12px;
+  background: #ffffff;
+  border: 1px solid rgba(230,233,241,.95);
+  border-radius: 16px;
+  box-shadow: 0 10px 26px rgba(16,24,40,.08);
+}
+
+.intranet .prop-sticky-title{
+  font-weight: 1000;
+  color: #003580;
+  line-height: 1.1;
+}
+
+.intranet .prop-sticky-sub{
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(29,36,51,.62);
+  margin-top: 2px;
+}
+
+.intranet .prop-sticky-actions{
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+}
+
+
+/* =========================
+   NUEVO: RESUMEN EDITABLE (quick edit)
+   (renderizado en #propSummaryCard)
+========================= */
+.intranet .prop-summary{
+  border: 1px solid rgba(230,233,241,.95);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+  box-shadow: 0 10px 26px rgba(16,24,40,.08);
+  padding: 12px;
+  margin: 0 0 12px;
+}
+
+.intranet .prop-summary-head{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.intranet .prop-summary-title{
+  min-width: 0;
+}
+
+.intranet .prop-summary-title h3{
+  margin: 0;
+  font-size: 14px;
+  font-weight: 1000;
+  color: #0f172a;
+}
+
+.intranet .prop-summary-title .muted{
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.intranet .prop-summary-actions{
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.intranet .prop-summary-grid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.intranet .prop-summary-grid2{
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.intranet .prop-sq{
+  border: 1px solid rgba(0,113,194,.10);
+  background: #f7f9ff;
+  border-radius: 14px;
+  padding: 10px;
+  min-width: 0;
+}
+
+.intranet .prop-sq .k{
+  font-size: 11px;
+  font-weight: 1000;
+  color: rgba(15,23,42,.65);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 6px;
+}
+
+.intranet .prop-sq .val{
+  font-weight: 1000;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.intranet .prop-sq input[type="text"],
+.intranet .prop-sq input[type="number"]{
+  width: 80%;
+  border: 1px solid rgba(15,23,42,.10);
+  border-radius: 12px;
+  padding: 10px 10px;
+  background: #fff;
+  font-weight: 900;
+}
+
+.intranet .prop-sq.is-click{
+  cursor: pointer;
+  transition: transform .08s ease, box-shadow .12s ease, border-color .12s ease;
+}
+
+.intranet .prop-sq.is-click:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(16,24,40,.10);
+  border-color: rgba(0,113,194,.22);
+}
+
+/* thumbs dentro del cuadrado de fotos (reusa .prop-thumb) */
+.intranet .prop-thumbs{
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* Quick edit: las miniaturas son solo vista previa (editar abajo en propPhotoEditorBox) */
+.intranet #propSummaryCard #qFotosBox .prop-thumb,
+.intranet #propSummaryCard #qFotosBox .prop-thumb img{
+  pointer-events: none;
+  cursor: default;
+}
+
+
+/* =========================
+   FORM COMPLETO: look más “cuidado”
+========================= */
+.intranet #propFullFieldsBox{
+  border: 1px solid rgba(230,233,241,.95);
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 12px;
+  box-shadow: 0 10px 26px rgba(16,24,40,.06);
+}
+
+.intranet #propFullFieldsBox .prop-edit-sec{
+  border: 1px solid rgba(230,233,241,.85);
+  background: #fbfcff;
+  border-radius: 14px;
+  padding: 10px;
+  margin: 0 0 10px;
+}
+
+.intranet #propFullFieldsBox .prop-edit-sec:last-child{
+  margin-bottom: 0;
+}
+
+/* Acciones del formulario completo */
+.intranet #propFullActionsBox{
+  margin-top: 12px;
+  border: 1px solid rgba(230,233,241,.95);
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 12px;
+  box-shadow: 0 10px 26px rgba(16,24,40,.06);
+}
+
+/* Si tu JS lo muestra/oculta, queda más consistente */
+.intranet .form-actions-split{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.intranet .form-actions-left,
+.intranet .form-actions-right{
+  display: inline-flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+
+/* =========================
+   Editor de fotos debajo del resumen (y también en full edit)
+========================= */
+.intranet #propPhotoEditorBox{
+  margin-top: 12px;
+  border: 1px solid rgba(230,233,241,.95);
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 12px;
+  box-shadow: 0 10px 26px rgba(16,24,40,.06);
+}
+
+
+/* =========================
+   Vista compacta (legacy)
+========================= */
+.intranet .prop-view-box{
+  border: 1px solid rgba(230,233,241,.95);
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px;
+  margin: 0 0 12px;
+}
+
+.intranet .prop-view-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
+}
+
+.intranet .prop-view-item{
+  border: 1px solid rgba(230,233,241,.85);
+  border-radius: 12px;
+  padding: 10px 10px;
+  background: #f7f8fc;
+}
+
+.intranet .prop-view-k{
+  font-size: 11px;
+  font-weight: 1000;
+  color: rgba(29,36,51,.55);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.intranet .prop-view-v{
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #1d2433;
+  word-break: break-word;
+}
+
+.intranet .prop-view-hint{
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 900;
+  color: rgba(29,36,51,.62);
+}
+
+
+/* =========================
+   BADGES (notificaciones)
+========================= */
+.intranet .nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #e01e37;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  margin-left: 6px;
+}
+
+
+/* =========================
+   CHAT
+========================= */
+.intranet .chat-messages {
+  border: 1px solid #dde1ee;
+  border-radius: 14px;
+  padding: 0.6rem;
+  height: 260px;
+  overflow-y: auto;
+  background: #fafbff;
+  margin-bottom: 0.6rem;
+}
+
+.intranet .chat-bubble {
+  max-width: 80%;
+  padding: 0.5rem 0.7rem;
+  border-radius: 16px;
+  margin-bottom: 0.4rem;
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.intranet .chat-bubble.host {
+  background: var(--bkg-blue);
+  color: #fff;
+  margin-left: auto;
+}
+
+.intranet .chat-bubble.guest {
+  background: #eef1f7;
+  color: #1f2937;
+  margin-right: auto;
+}
+
+.intranet .chat-meta {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-top: 0.15rem;
+}
+
+.intranet .chat-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.intranet .chat-form input[type="text"] {
+  flex: 1;
+  padding: 0.55rem 0.7rem;
+  border-radius: 12px;
+  border: 1px solid #cfd5e3;
+  font-size: 0.95rem;
+}
+
+
+/* =========================
+   DASHBOARD (móvil base)
+========================= */
+.intranet .dash-cards{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.intranet .dash-card{
+  background: #fff;
+  border: 1px solid rgba(230, 233, 241, .95);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+.intranet .dash-num{ font-weight: 1000; font-size: 22px; color: var(--text); }
+.intranet .dash-label{ font-weight: 900; font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+.intranet .dash-table-wrap{
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+
+/* =========================
+   FOTOS PREVIEW (único bloque)
+========================= */
+.intranet .photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.intranet .photo-item {
+  position: relative;
+  border: 1px solid #e6e6e6;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  transition: transform .08s ease, box-shadow .08s ease, border-color .08s ease;
+}
+
+.intranet .photo-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(0,0,0,.10);
+  border-color: #d9d9d9;
+}
+
+.intranet .photo-item img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+.intranet .photo-item.dragging {
+  opacity: .55;
+  transform: scale(.98);
+}
+
+.intranet .photo-item.drag-over {
+  outline: 2px dashed rgba(0,0,0,.35);
+  outline-offset: 4px;
+}
+
+.intranet .photo-item.main-photo::after {
+  content: "Principal";
+  position: absolute;
+  top: 8px;
+  left: 44px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(245, 197, 66, .92);
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.intranet .photo-item .photo-top {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.intranet .photo-item .photo-top button { pointer-events: auto; }
+
+.intranet .star-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(255,255,255,.92);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.intranet .star-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: rgba(0,0,0,.55);
+  stroke-width: 1.8;
+}
+
+.intranet .photo-item.main-photo .star-icon svg,
+.intranet .star-icon.is-main svg {
+  fill: #f5c542;
+  stroke: #f5c542;
+}
+
+.intranet .photo-delete {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(214,0,0,.25);
+  background: rgba(255,255,255,.92);
+  color: #d60000;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.intranet .photo-delete:hover { background: #ffecec; }
+
+.intranet .photo-item .photo-actions {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  justify-content: flex-end;
+  padding: 6px;
+  border-radius: 12px;
+  backdrop-filter: blur(1px);
+  box-shadow: 0 6px 14px rgba(0,0,0,.10);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .12s ease;
+}
+
+.intranet .photo-item:hover .photo-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.intranet .photo-item .photo-actions button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(0,0,0,.12);
+  background: #fff;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 900;
+  padding: 0;
+}
+
+
+/* =========================
+   CALENDARIO · INTRANET
+========================= */
+.intranet .intranet-cal-wrap { margin-top: 14px; }
+
+.intranet .cal-month-label {
+  font-weight: 900;
+  margin: 6px 0 10px;
+  color: var(--bkg-blue);
+}
+
+.intranet .cal-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.intranet .cal-mode {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.intranet .cal-mode label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 0;
+}
+
+.intranet .cal-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.intranet .calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.intranet .calendar-nav {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.intranet .calendar-nav button {
+  border: none;
+  border-radius: 12px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-weight: 900;
+  background: #eef1f7;
+  border: 1px solid rgba(230,233,241,.95);
+}
+
+.intranet .calendar-nav button:hover { background: #e4e8f2; }
+
+.intranet .calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.intranet .day-header,
+.intranet .cal-dow{
+  font-weight: 900;
+  font-size: 15px;
+  text-align: center;
+  color: rgba(0,53,128,.85);
+  padding: 6px 0 2px;
+}
+
+.intranet .calendar-day {
+  position: relative;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(0,0,0,.04);
+  aspect-ratio: 1/1;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  user-select: none;
+  transition: transform .08s ease, box-shadow .08s ease, border-color .08s ease;
+}
+
+.intranet .calendar-day:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(0,0,0,.08);
+  border-color: rgba(0,0,0,.16);
+}
+
+.intranet .calendar-day.available{ background: #f2fbf5; border-color: rgba(86,184,112,.35); }
+.intranet .calendar-day.occupied{ background: #fff5f5; border-color: rgba(234,106,106,.45); cursor: default; }
+.intranet .calendar-day.hold,
+.intranet .calendar-day.blocked{ background: #fff8ea; border-color: rgba(226,180,91,.50); }
+
+.intranet .calendar-day.other-month,
+.intranet .calendar-day.empty{
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.intranet .calendar-day.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.intranet .calendar-day.today{
+  background: #f6f9ff;
+  border-color: rgba(0,113,194,.45);
+  box-shadow: 0 0 0 3px rgba(0,113,194,.12);
+}
+
+.intranet .cal-daynum{
+  font-weight: 1000;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.intranet .cal-price {
+  align-self: flex-start;
+  font-weight: 1000;
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.06);
+  color: rgba(0,0,0,.72);
+}
+
+/* Selección/rango */
+.intranet .calendar-day.selected{
+  outline: 3px solid rgba(0,113,194,.25);
+  outline-offset: 2px;
+}
+
+.intranet .calendar-day.in-range{
+  background: #eaf2ff;
+  border-color: rgba(47,111,232,.35);
+}
+
+.intranet .calendar-day.range-start,
+.intranet .calendar-day.range-end{
+  border-color: rgba(47,111,232,.85);
+}
+
+/* Leyenda */
+.intranet .calendar-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eef0f6;
+}
+
+.intranet .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  color: #3a445a;
+  font-size: 0.9rem;
+}
+
+.intranet .legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 5px;
+  display: inline-block;
+}
+.intranet .legend-color.available { background: #eaf7ee; border: 1px solid #56b870; }
+.intranet .legend-color.occupied  { background: #ffecec; border: 1px solid #f3b2b2; }
+.intranet .legend-color.hold      { background: #fff3d6; border: 1px solid #f2c37a; }
+
+/* Info */
+.intranet .cal-info {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f6f9ff;
+  border: 1px solid rgba(0, 113, 194, 0.18);
+  color: #2a3142;
+  font-weight: 800;
+}
+
+/* CHECK-IN / CHECK-OUT badges */
+.intranet .calendar-day .cal-turnovers {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 32px;
+  display: flex;
+  gap: 6px;
+  justify-content: flex-start;
+  pointer-events: none;
+}
+
+.intranet .calendar-day .cal-turnovers.both {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.intranet .cal-badge {
+  pointer-events: auto;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.92);
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 6px 14px rgba(0,0,0,.08);
+  transition: transform .08s ease, background .12s ease, border-color .12s ease;
+}
+
+.intranet .cal-badge:hover {
+  transform: translateY(-1px);
+  border-color: rgba(0,0,0,.18);
+}
+
+.intranet .cal-badge-in { border-color: rgba(0, 128, 0, .25); }
+.intranet .cal-badge-out { border-color: rgba(10, 102, 194, .25); }
+
+.intranet .cal-badge-in::before { content: "↘"; font-weight: 1000; opacity: .85; }
+.intranet .cal-badge-out::before { content: "↗"; font-weight: 1000; opacity: .85; }
+
+/* Tooltip */
+.intranet .cal-tip {
+  position: fixed;
+  z-index: 9999;
+  width: 240px;
+  max-width: calc(100vw - 20px);
+  background: rgba(255,255,255,.96);
+  border: 1px solid rgba(0,0,0,.10);
+  border-radius: 14px;
+  padding: 10px 12px;
+  box-shadow: 0 18px 50px rgba(16, 24, 40, .18);
+  backdrop-filter: blur(8px);
+  color: #1d2433;
+}
+
+.intranet .cal-tip-title { font-weight: 1000; margin-bottom: 8px; letter-spacing: .2px; }
+
+.intranet .cal-tip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  padding: 3px 0;
+  border-top: 1px solid rgba(0,0,0,.06);
+}
+.intranet .cal-tip-row:first-of-type { border-top: 0; }
+
+.intranet .cal-tip-k { color: rgba(29,36,51,.65); font-weight: 900; }
+.intranet .cal-tip-v { font-weight: 900; }
+.intranet .cal-tip-hint { margin-top: 8px; font-size: 11px; font-weight: 900; color: rgba(0,0,0,.55); }
+
+/* Pack calendar: texto de disponibilidad */
+#packCalGrid .cal-price{
+  background: rgba(0,0,0,.06);
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-weight: 1000;
+  font-size: 12px;
+}
+#packCalGrid .calendar-day.occupied .cal-price{ opacity: .7; }
+
+/* Punto indicador de precio automático (85% del total de apartamentos) */
+.intranet .price-auto-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #aaa;
+  pointer-events: none;
+}
+#packCalGrid .cal-price-auto { color: rgba(0,0,0,.45); }
+#packCalGrid .cal-auto-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  opacity: .65;
+  margin-top: 1px;
+}
+#packCalGrid .cal-pack-state {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(0,0,0,.55);
+  margin-top: 2px;
+}
+
+/* Price calendar: permitir arrastre táctil sin que el navegador “robe” el gesto */
+#pcalGrid,
+#pcalGrid .calendar-day{
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Delete */
+.intranet #deletePropertyBtn{
+  background:#d92d20;
+  border:1px solid rgba(0,0,0,.05);
+  font-weight:900;
+  color: #ffffff;
+}
+.intranet #deletePropertyBtn:hover{ filter: brightness(.95); }
+
+
+/* =========================
+   GANANCIAS + COMENTARIOS (bloque original)
+========================= */
+.card-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.actions{ display:flex; gap:10px; align-items:center; }
+
+.filters{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  margin:12px 0;
+  align-items:flex-end;
+}
+
+.filters label{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:180px;
+}
+
+.filters label.grow{ flex:1; min-width:240px; }
+
+.table-wrap{ overflow:auto; }
+
+.data-table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  min-width: 820px;
+}
+
+.data-table th,
+.data-table td{
+  padding:10px 12px;
+  border-bottom:1px solid rgba(230,233,241,1);
+  vertical-align:top;
+}
+
+.data-table th{
+  text-align:left;
+  font-weight:900;
+  color:#253044;
+  background:#f7f8fb;
+  position:sticky;
+  top:0;
+  z-index:1;
+}
+
+.data-table td.num,
+.data-table th.num{ text-align:right; font-variant-numeric: tabular-nums; }
+
+.cell-text{
+  max-width:320px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.cell-actions{
+  white-space:nowrap;
+  text-align:right;
+}
+
+.btn-link{
+  background:transparent;
+  border:none;
+  color: var(--bkg-blue);
+  cursor:pointer;
+  font-weight:900;
+  padding:6px 8px;
+}
+
+.btn-link.danger{ color:#b42318; }
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  padding:4px 10px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:12px;
+  border:1px solid rgba(230,233,241,1);
+  background:#fff;
+}
+
+.badge-manual{ background:#f7f8fb; }
+.badge-google{ background:#e7f0ff; }
+.badge-booking{ background:#e6f7ff; }
+.badge-responded{ background:#eaf7ef; color:#1a7a45; font-weight:600; }
+
+.rating{
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  letter-spacing: 1px;
+}
+
+.kpi-grid{
+  display:grid;
+  grid-template-columns: repeat(5, minmax(160px, 1fr));
+  gap:12px;
+  margin-top:10px;
+}
+
+
+.kpi-card{
+  border:1px solid rgba(230,233,241,1);
+  border-radius:16px;
+  padding:12px 12px;
+  background:#fff;
+}
+
+.kpi-label{ font-weight:900; color:#2a3142; font-size:13px; }
+.kpi-value{ font-size:24px; font-weight:1000; margin-top:6px; }
+.kpi-sub{ margin-top:6px; color:#6b7280; font-size:12px; }
+
+
+/* =========================
+   Botón con loader (Guardando…)
+========================= */
+.intranet .btn-loading {
+  position: relative;
+  opacity: 0.92;
+  pointer-events: none;
+}
+
+.intranet .btn-loading::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,.65);
+  border-top-color: rgba(255,255,255,0);
+  border-radius: 999px;
+  display: inline-block;
+  margin-left: 10px;
+  vertical-align: -3px;
+  animation: intranetSpin .8s linear infinite;
+}
+
+@keyframes intranetSpin { to { transform: rotate(360deg); } }
+
+.intranet .btn-secondary.btn-loading::after {
+  border-color: rgba(0,0,0,.35);
+  border-top-color: rgba(0,0,0,0);
+}
+
+
+/* =========================
+   Vista compacta: items clicables (legacy)
+========================= */
+.intranet .prop-view-item{
+  cursor: pointer;
+  position: relative;
+}
+
+.intranet .prop-view-item:hover{
+  background: #f2f5ff;
+  border-color: rgba(0,113,194,.25);
+}
+
+.intranet .prop-view-item::after{
+  content: "Editar";
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  font-size: 11px;
+  font-weight: 1000;
+  color: rgba(0,53,128,.85);
+  background: rgba(0,113,194,.10);
+  border: 1px solid rgba(0,113,194,.18);
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+
+/* =========================
+   Thumbs (reusables)
+========================= */
+.intranet .prop-thumb{
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,.10);
+  background: #fff;
+}
+
+.intranet .prop-thumb.is-main{
+  border-color: rgba(245, 197, 66, .95);
+  box-shadow: 0 0 0 2px rgba(245, 197, 66, .25);
+}
+
+.intranet .prop-thumb img{
+  width: 100%;
+  height: 56px;
+  object-fit: cover;
+  display: block;
+}
+
+.intranet .prop-thumb-more{
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-weight: 1000;
+  font-size: 14px;
+  color: #fff;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(1px);
+}
+
+.intranet .prop-view-thumbs-empty{
+  margin-top: 8px;
+  font-weight: 900;
+  font-size: 12px;
+}
+
+/* ALOJAMIENTOS · LISTA (FIX botón Editar) */
+.intranet #tab-alojamientos .table th:last-child,
+.intranet #tab-alojamientos .table td:last-child{
+  padding-right: 12px;       /* un pelín más de aire */
+  white-space: nowrap;
+}
+
+.intranet #tab-alojamientos .table td:last-child .btn-secondary{
+  width: auto;
+  min-width: 92px;           /* asegura que "Editar" cabe */
+}
+
+
+/* =========================
+@MEDIAS · MAX-WIDTH
+========================= */
+
+@media (max-width: 1100px){
+.kpi-grid{ grid-template-columns: repeat(2, minmax(160px, 1fr)); }
+
+.intranet #tab-alojamientos .table td:last-child .btn-secondary {
+display:none;
+}
+
+.intranet #tab-alojamientos .table th:last-child, .intranet #tab-alojamientos .table td:last-child {
+width: auto;
+}
+.intranet .dash-table-wrap th:nth-child(1),
+.intranet .dash-table-wrap td:nth-child(1){
+display: none;
+}
+}
+
+@media (max-width: 980px) {
+.intranet .split { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 900px) {
+.intranet .row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+.intranet .dash-table-wrap th{
+  font-size: 0.6rem;
+} 
+}
+
+@media (max-width: 610px) {
+  .intranet .dash-table-wrap th:nth-child(3),
+  .intranet .dash-table-wrap td:nth-child(3){
+  display: none;
+  }
+}
+
+@media (max-width: 565px){
+.intranet #tab-alojamientos .table th:nth-child(1),
+.intranet #tab-alojamientos .table td:nth-child(1){
+display: none;
+}
+}
+
+@media (max-width: 520px){
+.intranet .prop-sticky-actions{ width: 100%; justify-content: flex-start; }
+
+.intranet .prop-summary-grid{
+grid-template-columns: 1fr;
+}
+
+.intranet .prop-summary-grid2{
+grid-template-columns: 1fr;
+}
+
+.intranet #propSummaryCard .prop-sq input[type="text"],
+.intranet #propSummaryCard .prop-sq input[type="number"]{
+  width: 100%;
+}
+
+.intranet #propSummaryCard .prop-thumbs{
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.intranet .prop-view-grid{ grid-template-columns: 1fr; }
+
+.intranet .table th, .intranet .table td{ padding: .55rem .5rem; }
+}
+
+@media (max-width: 480px){
+.intranet #tab-alojamientos .table th:nth-child(6),
+.intranet #tab-alojamientos .table td:nth-child(6){
+display: none;
+}
+}
+
+@media (max-width: 420px){
+.intranet .dash-cards{ grid-template-columns: 1fr; }
+}
+
+@media (max-width: 410px){
+.intranet #tab-alojamientos .table th:nth-child(4),
+.intranet #tab-alojamientos .table td:nth-child(4){
+display: none;
+}
+
+.intranet #newPropertyBtn{
+width: 40px;
+min-width: 40px;
+height: 40px;
+padding: 0;
+border-radius: 12px;
+font-size: 0;           /* oculta el texto */
+line-height: 0;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+flex: 0 0 auto;
+}
+
+.intranet #newPropertyBtn::before{
+content: "+";
+font-size: 24px;
+line-height: 1;
+font-weight: 900;
+}
+}
+
+/* =========================
+@MEDIAS · MIN-WIDTH
+========================= */
+
+/* Sticky panel (forms laterales) */
+@media (min-width: 1100px) {
+.intranet #tab-alojamientos .panel:last-child,
+.intranet #tab-packs .panel:last-child,
+.intranet #tab-reservas .panel:last-child,
+.intranet #tab-precios .panel:last-child {
+align-self: start;
+}
+.intranet .prop-sticky-head{ top: 0; }
+}
+
+@media (min-width: 980px){
+.intranet .prop-summary-grid{
+grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.intranet .prop-summary-grid2{
+grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.intranet .split{
+grid-template-columns: 1.3fr 1fr;
+gap: 16px;
+}
+}
+
+/* =========================
+DESKTOP ENHANCEMENTS
+========================= */
+@media (min-width: 700px){
+.intranet .topbar{ padding: 12px 18px; }
+.intranet .topbar .logo{ font-size: 15px; }
+.intranet #userEmail{ max-width: 360px; font-size: 13px; }
+
+.intranet .day-header, .intranet .cal-dow {
+font-size: 21px;
+}
+
+.intranet .main{ padding: 18px; }
+
+.intranet .dash-top{
+grid-template-columns: 1fr auto;
+gap: 12px;
+}
+
+.intranet .cal-daynum {
+font-size: 20px;
+}
+
+.intranet .cal-price {
+font-size: 18px;
+}
+
+.intranet .dash-actions{ justify-content: flex-end; }
+
+.intranet .dash-cards{
+grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.kpi-grid{
+grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.intranet .row{
+grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.intranet .chat-form{
+grid-template-columns: 1fr auto;
+}
+
+.intranet .chat-form button{
+width: auto;
+min-width: 140px;
+}
+
+.intranet .photo-grid{
+grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+.intranet .cal-toolbar{
+grid-template-columns: 1fr auto;
+align-items: end;
+}
+}
+
+
+/* =========================
+   EDITOR INLINE DE RESEÑAS
+========================= */
+
+/* Fila de la tabla que contiene el editor — sin separador visual */
+.intranet .rie-row > td {
+  padding: 0;
+  border-bottom: none;
+}
+
+/* Contenedor principal del editor */
+.intranet .review-inline-editor {
+  margin: 0 0 16px 0;
+  padding: 16px 20px;
+  background: #f8f9fa;
+  border-left: 3px solid #0066cc;
+  border-radius: 0 8px 8px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Cabecera: título + meta */
+.intranet .rie-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.intranet .rie-meta {
+  font-size: 0.82rem;
+}
+
+/* Estrellas clickables */
+.intranet .rie-stars {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.intranet .rie-star {
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #d0d5dd;
+  transition: color 0.12s;
+  user-select: none;
+  line-height: 1;
+}
+
+.intranet .rie-star.active {
+  color: #f6a000;
+}
+
+.intranet .rie-star:hover,
+.intranet .rie-star:hover ~ .rie-star {
+  color: #d0d5dd;
+}
+
+.intranet .rie-stars:hover .rie-star {
+  color: #d0d5dd;
+}
+
+.intranet .rie-stars .rie-star:hover,
+.intranet .rie-stars .rie-star:hover ~ .rie-star.active {
+  color: #f6a000;
+}
+
+/* Textarea compartido entre vistas */
+.intranet .rie-text,
+.intranet .rie-response {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  margin-bottom: 10px;
+}
+
+/* Grid de campos para vista completa */
+.intranet .rie-full-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+  margin-bottom: 12px;
+}
+
+.intranet .rie-full-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.intranet .rie-full-grid input,
+.intranet .rie-full-grid select,
+.intranet .rie-full-grid textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.9rem;
+}
+
+.intranet .rie-span2 {
+  grid-column: span 2;
+}
+
+/* Botones de acción */
+.intranet .rie-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+/* Modal de nuevo comentario — overlay */
+.intranet .rev-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.intranet .rev-modal {
+  background: #fff;
+  border-radius: 14px;
+  width: min(680px, 95vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+
+.intranet .rev-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e6e9f1;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.intranet .rev-modal-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.intranet .rev-modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .intranet .rie-full-grid {
+    grid-template-columns: 1fr;
+  }
+  .intranet .rie-span2 {
+    grid-column: span 1;
+  }
+}
+
+/* =========================
+   RESPONSIVE FIXES
+   ========================= */
+
+/* Badge de mensajes pendientes (nav) */
+.badge-msg {
+  background: #e53e3e;
+  color: white;
+  border-radius: 99px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 6px;
+  vertical-align: middle;
+  display: inline-block;
+}
+
+/* Editor inline debajo de la fila seleccionada (móvil) */
+.edit-inline {
+  margin: 8px 0 16px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-left: 3px solid #2563eb;
+  border-radius: 0 10px 10px 0;
+  box-shadow: 0 2px 12px rgba(0,0,0,.08);
+}
+.edit-inline h3 {
+  font-size: 15px;
+  margin: 0 0 12px;
+  color: #1a1a2e;
+}
+/* Fila <tr> contenedora del editor inline: sin estilos de tabla */
+.intranet .edit-inline-row > td {
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+/* ===== RESERVAS: tabla → tarjetas en móvil ===== */
+@media (max-width: 700px) {
+  .intranet .reservas-table thead { display: none; }
+
+  .intranet .reservas-table tbody tr {
+    display: block !important;
+    margin-bottom: 12px;
+    border: 1px solid rgba(0,0,0,.10) !important;
+    border-radius: 10px;
+    padding: 12px !important;
+    background: white;
+  }
+
+  .intranet .reservas-table tbody td {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 4px 0 !important;
+    border: none !important;
+    font-size: 13px;
+    gap: 8px;
+    text-align: left !important;
+    vertical-align: top !important;
+  }
+
+  .intranet .reservas-table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #667085;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    flex-shrink: 0;
+    min-width: 72px;
+  }
+
+  /* Primera celda (fecha): cabecera de tarjeta en negrita */
+  .intranet .reservas-table tbody td:first-child {
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 4px;
+    border-bottom: 1px solid rgba(0,0,0,.06) !important;
+  }
+  .intranet .reservas-table tbody td:first-child::before { display: none; }
+}
+
+/* ===== GANANCIAS: tabla de detalle → tarjetas en móvil ===== */
+@media (max-width: 700px) {
+  .intranet .ganancias-detalle-table {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  .intranet .ganancias-detalle-table thead { display: none; }
+
+  .intranet .ganancias-detalle-table tbody tr {
+    display: block !important;
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,.08) !important;
+    padding: 10px 12px !important;
+    margin-bottom: 8px;
+    background: #fff;
+  }
+
+  .intranet .ganancias-detalle-table tbody td {
+    display: flex !important;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 3px 0 !important;
+    border: none !important;
+    gap: 8px;
+    text-align: left !important;
+  }
+
+  .intranet .ganancias-detalle-table tbody td::before {
+    content: attr(data-label);
+    color: #888;
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+}
+
+/* ===== COMENTARIOS: tabla → tarjetas en móvil ===== */
+@media (max-width: 700px) {
+  .intranet .comentarios-table {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  .intranet .comentarios-table thead { display: none; }
+
+  /* Filas normales → tarjeta */
+  .intranet .comentarios-table tbody tr:not(.rie-row) {
+    display: block !important;
+    border: 1px solid rgba(0,0,0,.08) !important;
+    border-radius: 10px;
+    padding: 12px !important;
+    margin-bottom: 10px;
+    background: #fff;
+  }
+
+  .intranet .comentarios-table tbody td {
+    display: block !important;
+    padding: 3px 0 !important;
+    border: none !important;
+    font-size: 13px;
+    text-align: left !important;
+  }
+
+  /* Fila del editor inline: display block full-width */
+  .intranet .comentarios-table tbody .rie-row {
+    display: block !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0;
+    background: transparent;
+    margin-bottom: 8px;
+  }
+  .intranet .comentarios-table tbody .rie-row > td {
+    display: block !important;
+    padding: 0 !important;
+  }
+
+  /* Acciones en fila */
+  .intranet .comentarios-table .cell-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .intranet .comentarios-table .cell-actions .btn-link {
+    padding: 6px 10px;
+    border: 1px solid rgba(0,0,0,.12);
+    border-radius: 8px;
+    font-size: 12px;
+    min-height: 36px;
+  }
+}
+
+/* ===== CALENDARIO: celdas más compactas en móvil ===== */
+@media (max-width: 700px) {
+  .intranet .calendar-day {
+    min-height: 48px !important;
+    padding: 4px 2px !important;
+    border-radius: 6px !important;
+    aspect-ratio: auto !important;
+  }
+
+  .intranet .cal-daynum { font-size: 11px !important; }
+  .intranet .cal-price  { font-size: 9px !important; padding: 1px 4px !important; }
+
+  .intranet .day-header,
+  .intranet .cal-dow {
+    font-size: 10px !important;
+    padding: 4px 0 1px !important;
+  }
+
+  .intranet .calendar-grid { gap: 3px !important; }
+
+  /* Leyenda del calendario: 2 columnas */
+  .intranet .calendar-legend {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+
+  /* Navegación del calendario */
+  .intranet .calendar-nav button {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+}
+
+/* ===== FILTROS: columna vertical en móvil ===== */
+@media (max-width: 700px) {
+  .filters {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .filters label {
+    min-width: 0;
+    width: 100%;
+  }
+  .filters label.grow {
+    min-width: 0;
+    width: 100%;
+  }
+  /* Touch targets solo en móvil (no rompe btn-sm en desktop) */
+  .intranet .btn-primary,
+  .intranet .btn-secondary {
+    min-height: 44px;
+  }
+}
+
+/* KPI grid responsive */
+@media (max-width: 768px) {
+  .kpi-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 400px) {
+  .kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Prevenir zoom iOS en inputs de la intranet */
+@media (max-width: 768px) {
+  .intranet input[type="text"],
+  .intranet input[type="email"],
+  .intranet input[type="password"],
+  .intranet input[type="number"],
+  .intranet input[type="date"],
+  .intranet select,
+  .intranet textarea {
+    font-size: 16px;
+  }
+}
+
+/* Split: colapsar en tablet */
+@media (max-width: 768px) {
+  .intranet .split {
+    grid-template-columns: 1fr;
+  }
+  .intranet .row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Prevenir desbordamiento horizontal en la intranet */
+.intranet {
+  overflow-x: hidden;
+}
+
+/* Topbar: ocultar email en móvil */
+@media (max-width: 600px) {
+  .intranet #userEmail {
+    display: none;
+  }
+}
+
+/* Calendario intranet: texto compacto en tablet */
+@media (max-width: 900px) {
+  .intranet .cal-daynum {
+    font-size: 13px;
+  }
+  .intranet .cal-price {
+    font-size: 11px;
+    padding: 2px 5px;
+  }
+  .intranet .day-header,
+  .intranet .cal-dow {
+    font-size: 12px;
+  }
+}
+
+/* Prop summary grid: 2 cols en tablet */
+@media (max-width: 768px) and (min-width: 521px) {
+  .intranet .prop-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Pack summary card: responsive en móvil */
+@media (max-width: 520px) {
+  .intranet #packSummaryCard .prop-sq input[type="text"],
+  .intranet #packSummaryCard .prop-sq input[type="number"] {
+    width: 100%;
+  }
+  .intranet #packSummaryCard .prop-thumbs {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+
+/* =========================
+   LOGIN (Acceso) — coherente con el design system, en AZUL (admin)
+   Scoped a #loginView para no afectar al resto de la intranet.
+   ========================= */
+.intranet #loginView{
+  display: flex;
+  justify-content: center;
+  padding: 6vh 1rem 2rem;
+}
+.intranet #loginView .card{
+  width: 100%;
+  max-width: 384px;
+  margin: 0 auto;
+  padding: 1.6rem 1.5rem 1.75rem;
+  box-shadow: var(--shadow-lg, 0 8px 32px rgba(16,24,40,.14));
+  border: 1px solid var(--color-border, rgba(0,0,0,.08));
+}
+.intranet #loginView h1{
+  font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+.intranet #loginView .muted{ margin-top: 2px; }
+/* Inputs con la forma del sistema (44px de alto, 16px = sin zoom en iOS) */
+.intranet #loginView .input{
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: 16px;
+  border: 1.5px solid var(--color-border-strong, rgba(0,0,0,.15));
+  border-radius: 8px;
+}
+.intranet #loginView .input:focus{
+  border-color: var(--bkg-blue-2);
+  box-shadow: 0 0 0 3px rgba(0,113,194,.16);
+}
+/* Botón "Entrar": SE MANTIENE AZUL (.btn-primary), con la altura del sistema */
+.intranet #loginView .btn-primary.full{
+  min-height: 48px;
+  margin-top: .65rem;
+  font-size: 15px;
+  border-radius: 12px;
+}

@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>JLA · Intranet</title>
+
+    <!-- “Calienta” la intranet mientras corre la intro -->
+    <link rel="prefetch" href="/intranet/" as="document" />
+    <link rel="preload" href="/css/intranet.css" as="style" />
+    <!-- Si tu intranet arranca desde un JS principal, puedes precargarlo también (opcional) -->
+    <!-- <link rel="modulepreload" href="/intranet/app-intranet.js" /> -->
+
+    <style>
+      :root{
+        --bg:#07090d;
+        --bg2:#0b0e16;
+        --gold:#caa45c;
+        --gold2:#f1d48a;
+        --ink:rgba(255,255,255,.92);
+        --muted:rgba(255,255,255,.62);
+        --panel:rgba(255,255,255,.06);
+        --stroke:rgba(255,255,255,.10);
+      }
+      *{box-sizing:border-box}
+      html,body{height:100%}
+      body{
+        margin:0;
+        background:
+          radial-gradient(1200px 800px at 30% 25%, #12172a 0%, var(--bg) 55%),
+          radial-gradient(900px 600px at 75% 70%, #101524 0%, var(--bg2) 60%);
+        color:var(--ink);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        overflow:hidden;
+      }
+
+      .stage{
+        position:relative;
+        height:100%;
+        display:grid;
+        place-items:center;
+        isolation:isolate;
+      }
+
+      .light{
+        position:absolute;
+        inset:-35%;
+        background:
+          radial-gradient(circle at 28% 35%, rgba(202,164,92,.16), transparent 55%),
+          radial-gradient(circle at 70% 70%, rgba(241,212,138,.09), transparent 60%),
+          conic-gradient(from 200deg at 50% 50%,
+            rgba(255,255,255,.10), transparent 15%, transparent 55%, rgba(255,255,255,.08), transparent 75%);
+        filter: blur(26px);
+        opacity:.75;
+        animation: drift 3.2s ease-in-out forwards;
+        z-index:0;
+      }
+
+      .grain{
+        position:absolute;
+        inset:-40%;
+        background-image:
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+        mix-blend-mode: overlay;
+        opacity:.30;
+        animation: grainMove 1.15s steps(2) infinite;
+        z-index:1;
+        pointer-events:none;
+      }
+
+      .vignette{
+        position:absolute;
+        inset:0;
+        background: radial-gradient(circle at 50% 50%, transparent 45%, rgba(0,0,0,.68) 100%);
+        z-index:2;
+        pointer-events:none;
+      }
+
+      .card{
+        position:relative;
+        z-index:3;
+        width:min(720px, 92vw);
+        padding: 34px 26px 26px;
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+        border: 1px solid var(--stroke);
+        box-shadow: 0 25px 70px rgba(0,0,0,.55);
+        text-align:center;
+
+        opacity:0;
+        transform: translateY(14px) scale(.985);
+        filter: blur(10px);
+        animation: enter 1.15s ease forwards;
+        animation-delay: .15s;
+      }
+
+      .badge{
+        display:inline-flex;
+        align-items:center;
+        gap:10px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(0,0,0,.25);
+        border: 1px solid rgba(202,164,92,.35);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+        margin-bottom: 18px;
+      }
+
+      .lock{
+        width: 18px;
+        height: 18px;
+        display:inline-block;
+        background:
+          radial-gradient(circle at 50% 50%, rgba(241,212,138,.55), rgba(202,164,92,.15) 55%, transparent 60%);
+        border-radius: 6px;
+        position: relative;
+      }
+      .lock:before{
+        content:"";
+        position:absolute;
+        left:50%;
+        top:-7px;
+        width: 12px;
+        height: 10px;
+        transform: translateX(-50%);
+        border: 2px solid rgba(241,212,138,.45);
+        border-bottom: 0;
+        border-radius: 10px 10px 0 0;
+        opacity:.9;
+      }
+
+      .badgeText{
+        font-size: 12px;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,.82);
+      }
+
+      .title{
+        font-size: clamp(26px, 4.2vw, 40px);
+        margin: 0;
+        letter-spacing: .06em;
+      }
+
+      .subtitle{
+        margin: 10px auto 0;
+        max-width: 52ch;
+        color: var(--muted);
+        font-size: 14px;
+        letter-spacing: .02em;
+      }
+
+      .divider{
+        width:min(560px, 90%);
+        height:1px;
+        margin: 18px auto 0;
+        background: linear-gradient(90deg, transparent, rgba(202,164,92,.55), transparent);
+        opacity:.85;
+        transform: scaleX(.72);
+        animation: lineIn .9s ease forwards;
+        animation-delay: .7s;
+      }
+
+      .loading{
+        margin: 22px auto 0;
+        width:min(560px, 90%);
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: 999px;
+        overflow:hidden;
+        height: 10px;
+      }
+      .loading > span{
+        display:block;
+        height:100%;
+        width:0%;
+        background: linear-gradient(90deg, rgba(202,164,92,.70), rgba(241,212,138,.85), rgba(202,164,92,.70));
+        filter: drop-shadow(0 8px 18px rgba(202,164,92,.18));
+        animation: load 2.6s ease forwards;
+      }
+
+      .foot{
+        margin-top: 14px;
+        font-size: 12px;
+        color: rgba(255,255,255,.56);
+        letter-spacing: .06em;
+      }
+
+      /* Fade final */
+      .fadeOut{
+        position:absolute;
+        inset:0;
+        background:#000;
+        opacity:0;
+        z-index:4;
+        animation: fadeToBlack .55s ease forwards;
+        animation-delay: 2.95s;
+        pointer-events:none;
+      }
+
+      @keyframes drift{
+        0%   { transform: translate3d(-2%, -1%, 0) rotate(-2deg) scale(1.05); opacity:0; }
+        20%  { opacity:.8; }
+        100% { transform: translate3d(3.2%, 2.0%, 0) rotate(1.4deg) scale(1.10); opacity:.62; }
+      }
+      @keyframes grainMove{
+        0%{ transform: translate3d(0,0,0) }
+        25%{ transform: translate3d(-2%,1%,0) }
+        50%{ transform: translate3d(1%,-2%,0) }
+        75%{ transform: translate3d(2%,2%,0) }
+        100%{ transform: translate3d(0,0,0) }
+      }
+      @keyframes enter{
+        to{ opacity:1; transform: translateY(0) scale(1); filter: blur(0); }
+      }
+      @keyframes lineIn{
+        to{ transform: scaleX(1); opacity:1; }
+      }
+      @keyframes load{
+        0%   { width: 0%; }
+        55%  { width: 68%; }
+        85%  { width: 92%; }
+        100% { width: 100%; }
+      }
+      @keyframes fadeToBlack{
+        to{ opacity:1; }
+      }
+
+      @media (prefers-reduced-motion: reduce){
+        .light,.grain,.card,.divider,.loading>span,.fadeOut{ animation:none!important; }
+        .card{ opacity:1; transform:none; filter:none; }
+        .loading>span{ width:100%; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="stage">
+      <div class="light"></div>
+      <div class="grain"></div>
+      <div class="vignette"></div>
+
+      <main class="card" aria-label="JLA Intranet">
+        <div class="badge">
+          <span class="lock" aria-hidden="true"></span>
+          <span class="badgeText">Intranet · Acceso privado</span>
+        </div>
+
+        <h1 class="title">JLA Intranet</h1>
+        <p class="subtitle">
+          Cargando panel de gestión, calendario, reservas y herramientas internas…
+        </p>
+
+        <div class="divider"></div>
+
+        <div class="loading" role="progressbar" aria-label="Cargando">
+          <span></span>
+        </div>
+
+        <div class="foot">Preparando sesión y datos…</div>
+      </main>
+
+      <div class="fadeOut"></div>
+    </div>
+
+    <script>
+      // Destino (Opción B): intranet vive en /intranet/
+      const DEST = "/intranet/";
+      const TOTAL_MS = 3450;   // duración total del clip
+      const HARD_MAX = 6500;   // fallback por si acaso
+
+      // Calienta el HTML de destino sin bloquear
+      try { fetch(DEST, { cache: "force-cache" }).catch(()=>{}); } catch(e){}
+
+      const go = () => window.location.replace(DEST);
+      setTimeout(go, TOTAL_MS);
+      setTimeout(go, HARD_MAX);
+
+      // Evita quedarse en splash si el navegador vuelve atrás cacheado
+      window.addEventListener("pageshow", (e) => {
+        if (e.persisted) go();
+      });
+    </script>
+  </body>
+</html>

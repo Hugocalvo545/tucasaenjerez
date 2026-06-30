@@ -1,0 +1,374 @@
+<!-- multi/checkout.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reserva · JLA Apartments</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#C9A96A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="JLA Apartments">
+  <link rel="apple-touch-icon" href="/img/icon-192.png">
+  <link rel="icon" href="/img/icon-192.png">
+
+  <!-- Design system base (tokens + componentes) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/design-system.css">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/multi-overrides.css">
+  <!-- Nav superior única consolidada (cargar DESPUÉS de multi-overrides.css) -->
+  <link rel="stylesheet" href="../css/multi-nav.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.21.0/dist/tabler-icons.min.css">
+</head>
+
+<body>
+
+  <!-- TOPBAR -->
+  <header class="multi-topbar">
+    <a class="multi-brand" href="https://tucasaenjerez.com/" aria-label="Tu Casa en Jerez">
+      <i class="ti ti-building-community multi-brand__icon"></i>
+      <span class="multi-brand__text">Tu Casa en Jerez</span>
+    </a>
+    <nav class="multi-nav" aria-label="Navegación principal">
+      <!-- PRODUCCIÓN: enlace externo a la web principal (mantiene SSO via .multi-topbar-back) -->
+      <a class="multi-nav__link multi-topbar-back" href="https://tucasaenjerez.com/" aria-label="Inicio">
+        <i class="ti ti-home" aria-hidden="true"></i><span>Inicio</span>
+      </a>
+      <a class="multi-nav__link is-active" aria-current="page" href="./index.html" aria-label="Apartamentos">
+        <i class="ti ti-building" aria-hidden="true"></i><span>Apartamentos</span>
+      </a>
+      <a class="multi-nav__link" href="../perfil/index-usuario.html#reservas" aria-label="Reservas">
+        <i class="ti ti-calendar-event" aria-hidden="true"></i><span>Reservas</span>
+      </a>
+      <a class="multi-nav__link" href="../perfil/index-usuario.html" aria-label="Perfil">
+        <i class="ti ti-user" aria-hidden="true"></i><span>Perfil</span>
+      </a>
+    </nav>
+  </header>
+
+  <!-- LAYOUT -->
+  <div class="user-layout">
+
+    <!-- MAIN -->
+    <div class="user-main">
+
+      <!-- BOOKING SCREEN -->
+      <div id="bookingScreen">
+
+        <!-- Header -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+          <h2>Nueva reserva</h2>
+          <button type="button" class="btn-secondary" onclick="cancelBooking()">Cancelar</button>
+        </div>
+
+        <!-- Stepper -->
+        <div class="step-indicator">
+          <div class="step active" id="bStep1">1</div>
+          <div class="step-line" id="bLine"></div>
+          <div class="step" id="bStep2">2</div>
+          <div class="step-line"></div>
+          <div class="step" id="bStep3">3</div>
+        </div>
+
+        <!-- STEP 1 · CALENDARIO -->
+        <div class="step-content active" id="bookStep1">
+          <div class="booking-screen-cal">
+            <div class="booking-form-cal">
+
+              <h3>Selecciona tus fechas</h3>
+
+              <div class="calendar-header" style="margin-top:16px;">
+                <button type="button" class="btn-secondary" onclick="previousMonth()">←</button>
+                <h3 id="calendarMonth" style="margin:0;">Mes</h3>
+                <button type="button" class="btn-secondary" onclick="nextMonth()">→</button>
+              </div>
+
+              <div id="calendarGrid" class="calendar-grid"></div>
+              <div id="calendarInfo" style="margin-top:12px;font-size:14px;"></div>
+
+              <div class="booking-dates" style="margin-top:16px;">
+                <div class="booking-date">
+                  <label>Entrada</label>
+                  <div id="bookCheckInDisplay">-</div>
+                </div>
+                <div class="booking-date">
+                  <label>Salida</label>
+                  <div id="bookCheckOutDisplay">-</div>
+                </div>
+                <div class="booking-date">
+                  <label>Noches</label>
+                  <div id="nightsCount">0</div>
+                </div>
+              </div>
+
+              <div style="margin-top:18px;display:flex;justify-content:flex-end;">
+                <button
+                  type="button"
+                  class="btn-primary"
+                  id="btnStep1Continue"
+                  onclick="validateAndGoToStep2()"
+                >
+                  Continuar
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2 · HUÉSPEDES -->
+        <div class="step-content" id="bookStep2">
+          <div class="booking-form" style="max-width:820px;">
+
+            <h3>Datos de la reserva</h3>
+
+            <div class="form-row" style="margin-top:12px;">
+              <div class="form-field">
+                <label for="bookName">Nombre y apellidos</label>
+                <input id="bookName" type="text" placeholder="Ej: Juan Pérez" />
+              </div>
+              <div class="form-field">
+                <label for="bookEmail">Email</label>
+                <input id="bookEmail" type="email" placeholder="ejemplo@email.com" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label for="bookPhone">Teléfono</label>
+                <input id="bookPhone" type="tel" placeholder="+34 600 000 000" />
+              </div>
+              <div class="form-field">
+                <label for="bookNotes">Notas (opcional)</label>
+                <input id="bookNotes" type="text" placeholder="Hora estimada de llegada, peticiones..." />
+              </div>
+            </div>
+
+            <!-- Contadores -->
+            <div class="guest-section" style="margin-top:18px;">
+              <h4>Huéspedes</h4>
+
+              <div class="guest-counters">
+                <div class="guest-counter-row">
+                  <div>
+                    <p><strong>Adultos</strong></p>
+                    <p style="font-size:13px;color:#666;">Mín. 1</p>
+                  </div>
+                  <div class="guest-counter">
+                    <button type="button" class="guest-counter-btn" onclick="changeGuests('adults', -1)">−</button>
+                    <input id="bookAdults" type="number" min="1" max="4" step="1" value="1" readonly />
+                    <button type="button" class="guest-counter-btn" onclick="changeGuests('adults', 1)">+</button>
+                  </div>
+                </div>
+
+                <div class="guest-counter-row">
+                  <div>
+                    <p><strong>Niños</strong></p>
+                    <p style="font-size:13px;color:#666;">0–4</p>
+                  </div>
+                  <div class="guest-counter">
+                    <button type="button" class="guest-counter-btn" onclick="changeGuests('children', -1)">−</button>
+                    <input id="bookChildren" type="number" min="0" max="4" step="1" value="0" readonly />
+                    <button type="button" class="guest-counter-btn" onclick="changeGuests('children', 1)">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Formularios viajeros -->
+            <div style="margin-top:14px;">
+              <h3 style="margin:0 0 10px 0;">Datos de los viajeros</h3>
+              <p style="margin:0 0 12px 0;color:#666;font-size:.95rem;">
+                Completa los datos obligatorios. Puedes usar huéspedes frecuentes para rellenar más rápido.
+              </p>
+
+              <div id="guestFormsContainer"></div>
+
+              <div class="guest-sidebox">
+                <h4 style="margin:0 0 8px 0;">Huéspedes frecuentes</h4>
+                <div id="frecuentGuestsList"></div>
+              </div>
+            </div>
+
+            <!-- Aceptación legal RGPD -->
+            <div style="margin-top:18px;padding:14px 16px;background:#fbf7ee;border:1px solid rgba(243,198,105,.45);border-radius:10px;">
+              <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:.93rem;line-height:1.5;">
+                <input type="checkbox" id="acceptPrivacy" style="margin-top:3px;flex-shrink:0;accent-color:#a07d3b;">
+                <span>
+                  He leído y acepto la
+                  <a href="/privacidad.html" target="_blank" style="color:#a07d3b;">Política de privacidad</a>
+                  y los
+                  <a href="/terminos.html" target="_blank" style="color:#a07d3b;">Términos y condiciones</a>,
+                  incluyendo la política de cancelación.
+                </span>
+              </label>
+            </div>
+
+            <div style="margin-top:14px;display:flex;justify-content:space-between;">
+              <button type="button" class="btn-secondary" onclick="bookGoToStep(1)">← Volver</button>
+              <button type="button" class="btn-primary" onclick="goToStep3WithValidation()">Calcular precio</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- STEP 3 · CONFIRMACIÓN -->
+        <div class="step-content" id="bookStep3">
+          <div class="booking-form" style="max-width:820px;">
+
+            <h3>Confirmación</h3>
+
+            <div id="finalPriceBox" class="final-price-box" style="margin-top:14px;">
+              <div id="bookDiscountBox" style="display:none;">
+                <div style="display:flex;justify-content:space-between;font-size:14px;color:#555;margin-bottom:4px;">
+                  <span>Precio base:</span><span id="bookBasePrice">-</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:14px;color:#27ae60;font-weight:600;margin-bottom:6px;">
+                  <span id="bookDiscountLabel">Descuento:</span><span id="bookDiscountLine">-</span>
+                </div>
+                <hr style="margin:6px 0;border:none;border-top:1px solid #eee;">
+              </div>
+              <p><strong>Total a pagar:</strong> <span id="bookTotalPrice">-</span></p>
+              <p style="font-size:13px;color:#666;margin-top:6px;">
+                El precio puede variar si hay precios por día configurados.
+              </p>
+            </div>
+
+            <div style="margin-top:18px;display:flex;justify-content:space-between;">
+              <button type="button" class="btn-secondary" onclick="bookGoToStep(2)">← Volver</button>
+              <button type="button" class="btn-primary" id="confirmBookingBtn">Confirmar y pagar</button>
+            </div>
+
+            <div id="bookStatus" style="margin-top:14px;font-size:14px;"></div>
+
+          </div>
+        </div>
+
+      </div>
+      <!-- /BOOKING SCREEN -->
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="summary-column" id="summaryColumn">
+      <div class="summary-box">
+        <h3 class="summary-title">Tu reserva</h3>
+
+        <div class="property-card">
+          <img id="summaryPropertyImg" alt="Alojamiento" onerror="this.onerror=null;this.src='../img/placeholder-alojamiento.svg'">
+          <div class="property-info">
+            <p><strong id="summaryPropertyName">Alojamiento</strong></p>
+            <p id="summaryPropertyMeta"></p>
+            <p style="margin-top:8px;color:#1a8b7d;">
+              <strong><span id="summaryPricePerNight">-</span></strong>
+            </p>
+          </div>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <div class="summary-item"><span>Entrada:</span><span id="summaryCheckIn">-</span></div>
+        <div class="summary-item"><span>Salida:</span><span id="summaryCheckOut">-</span></div>
+
+        <div class="summary-divider"></div>
+
+        <div class="summary-item"><span>Noches:</span><span id="summaryNights">-</span></div>
+        <div class="summary-item"><span>Adultos:</span><span id="summaryAdults">-</span></div>
+        <div class="summary-item"><span>Niños:</span><span id="summaryChildren">-</span></div>
+
+        <div class="summary-divider"></div>
+
+        <div class="summary-item">
+          <span>Total:</span>
+          <strong><span id="summaryTotal">-</span></strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODALES -->
+    <div class="modal" id="selectFrequentGuestModal">
+      <div class="modal-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;">
+          <h3 style="margin:0;">Usar huésped frecuente</h3>
+          <button type="button" class="btn-ghost" onclick="closeSelectGuestModal()">×</button>
+        </div>
+        <div id="frequentGuestsSelectList"></div>
+      </div>
+    </div>
+
+    <div class="modal" id="addGuestModal">
+      <div class="modal-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;">
+          <h3 style="margin:0;">Añadir huésped frecuente</h3>
+          <button type="button" class="btn-ghost" onclick="closeAddGuestModal()">×</button>
+        </div>
+        <form id="addGuestForm" onsubmit="return false;"></form>
+      </div>
+    </div>
+
+    <div class="modal" id="successModal" aria-hidden="true">
+      <div class="modal-content" style="max-width:520px;">
+        <h3 style="margin:0 0 10px 0;">✅ Reserva confirmada</h3>
+
+        <div style="background:#fbf7ee;border:1px solid rgba(243,198,105,.55);border-radius:14px;padding:12px;margin:12px 0;">
+          <div style="font-weight:800;" id="successPropertyName"></div>
+          <div style="color:#555;margin-top:4px;" id="successDates"></div>
+          <div style="color:#555;margin-top:4px;" id="successGuests"></div>
+          <div style="font-weight:900;margin-top:8px;" id="successTotal"></div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;">
+          <button type="button" class="btn-secondary" id="successGoList">Volver al listado</button>
+          <button type="button" class="btn-primary" id="successGoProfile">Ver mi perfil</button>
+        </div>
+
+        <p style="margin:10px 0 0 0;color:#777;font-size:.9rem;">
+          Te hemos enviado un email de confirmación.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FIREBASE COMPAT -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <!-- ENV -->
+  <script src="../shared/env.js"></script>
+
+  <!-- App -->
+  <script type="module" src="./checkout-app.js"></script>
+
+
+  <!-- Registro del Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      let swReloading = false;
+      navigator.serviceWorker.register('/sw.js').then((reg) => {
+        reg.update().catch(() => {});
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+              if (!swReloading) { swReloading = true; window.location.reload(); }
+            }
+          });
+        });
+      }).catch((e) => console.warn('[SW] No registrado:', e));
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!swReloading) { swReloading = true; window.location.reload(); }
+      });
+    }
+  </script>
+</body>
+</html>

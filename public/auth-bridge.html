@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex,nofollow">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+<script>
+  // PRODUCCIÓN: URL → cambiar al dominio WordPress real (ej: "https://jlaapartments.com")
+  // También actualizar X-Frame-Options y Content-Security-Policy en firebase.json
+  const ALLOWED_ORIGIN = "https://tucasaenjerez.com";
+
+  firebase.initializeApp({
+    apiKey:            "AIzaSyBV7CFyhCdwd0DIyK81K33VgmU_Nvet52s",
+    authDomain:        "tucasaenjerez-3362a.firebaseapp.com",
+    projectId:         "tucasaenjerez-3362a",
+    storageBucket:     "tucasaenjerez-3362a.firebasestorage.app",
+    messagingSenderId: "573723173978",
+    appId:             "1:573723173978:web:5ba44bd7b77ea741ba2463",
+  });
+
+  firebase.auth().onAuthStateChanged((user) => {
+    const payload = user
+      ? { loggedIn: true,  uid: user.uid, email: user.email, displayName: user.displayName || user.email }
+      : { loggedIn: false };
+
+    // Enviar a WordPress (y también a cualquier padre en el origen permitido)
+    if (window.parent !== window) {
+      window.parent.postMessage(payload, ALLOWED_ORIGIN);
+    }
+  });
+</script>
+</body>
+</html>

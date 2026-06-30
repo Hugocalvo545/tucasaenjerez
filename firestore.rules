@@ -1,0 +1,229 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* ========= HELPERS ========= */
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.uid in [
+          "9YsZ5CGjQLRHsP055UwxzB7yMsa2"
+        ]
+        ||
+        request.auth.token.email in [
+          "hugocalvogarcia123@gmail.com"
+        ]
+      );
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function onlyUpdates(keys) {
+      return request.resource.data.diff(resource.data)
+        .affectedKeys()
+        .hasOnly(keys);
+    }
+
+    /* ========= USUARIOS ========= */
+
+    match /usuarios/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /huespedes_frecuentes/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    /* ========= APARTAMENTOS ========= */
+
+    match /apartamentos/{aptoId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      match /prices/{dateId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
+
+    /* ========= PACKS ========= */
+
+    match /packs/{packId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      match /prices/{dateId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
+
+    /* ========= RESERVAS PUBLICAS (CALENDARIO) ========= */
+
+    match /reservas_public/{id} {
+      allow read: if true;
+
+      // La Cloud Function escribe con Admin SDK (bypass de rules),
+      // pero dejamos esto para compatibilidad con el flujo antiguo si lo necesitas.
+      allow create: if isSignedIn()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.reservaId == id
+        && request.resource.data.propertyId is string
+        && request.resource.data.checkInISO is string
+        && request.resource.data.checkOutISO is string;
+
+      allow update: if isAdmin();
+
+      // El propietario de la reserva puede eliminar su bloqueo de fechas al cancelar.
+      allow delete: if isAdmin()
+        || (isSignedIn()
+          && get(/databases/$(database)/documents/reservas/$(id)).data.userId == request.auth.uid);
+    }
+
+    /* ========= RESERVAS PRIVADAS ========= */
+
+    match /reservas/{reservaId} {
+
+      // resource == null cuando el documento no existe todavía (polling pre-webhook):
+      // devolver "not found" a un usuario autenticado no expone datos.
+      allow read: if isSignedIn()
+        && (resource == null || resource.data.userId == request.auth.uid || isAdmin());
+
+      // La Cloud Function (webhook) escribe con Admin SDK — no necesita esta regla.
+      // La mantenemos por si se usa el flujo cliente directo como fallback.
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.propertyId is string
+        && request.resource.data.checkInISO is string
+        && request.resource.data.checkOutISO is string
+        && request.resource.data.checkInISO <= request.resource.data.checkOutISO;
+
+      allow update: if isSignedIn()
+        && request.auth.uid == resource.data.userId
+        && onlyUpdates(["observations"]);
+
+      // El huésped puede cancelar su propia reserva.
+      allow update: if isSignedIn()
+        && request.auth.uid == resource.data.userId
+        && onlyUpdates(["status", "cancelledAt"])
+        && request.resource.data.status == "cancelled";
+
+      allow update, delete: if isAdmin();
+    }
+
+    /* ========= RESERVAS PENDIENTES (pre-pago Stripe) ========= */
+
+    match /pending_bookings/{id} {
+      // El usuario puede leer su propia reserva pendiente (para la página de éxito)
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+
+      // Solo la Cloud Function escribe (Admin SDK — bypass automático)
+      allow write: if false;
+    }
+
+    /* ========= HOLDS ========= */
+
+    match /holds/{holdId} {
+
+      allow read: if true;
+
+      // 16 minutos en las rules para absorber desfase de reloj y latencia de red
+      // (el cliente crea el hold con 14m50s para estar siempre por debajo)
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.expiresAt > request.time
+        && request.resource.data.expiresAt <=
+           request.time + duration.value(16, "m");
+
+      allow delete: if
+        (isSignedIn() && request.auth.uid == resource.data.userId)
+        || (resource.data.expiresAt <= request.time)
+        || isAdmin();
+
+      allow update: if false;
+    }
+
+    /* ========= BLOQUEOS (INTRANET) ========= */
+
+    match /bloqueos/{bloqueoId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    /* ========= TOKENS DISPOSITIVOS ========= */
+
+    match /deviceTokens/{tokenId} {
+      allow read, write: if isAdmin()
+        || (isSignedIn() && request.auth.uid == resource.data.userId);
+    }
+
+    /* ========= CHAT ========= */
+
+    match /chats/{chatId} {
+
+      allow read: if isAdmin()
+        || (isSignedIn()
+          && request.auth.uid == get(
+            /databases/$(database)/documents/reservas/$(chatId)
+          ).data.userId
+        );
+
+      allow write: if isAdmin();
+
+      match /mensajes/{mensajeId} {
+
+        allow read: if isAdmin()
+          || (isSignedIn()
+            && request.auth.uid == get(
+              /databases/$(database)/documents/reservas/$(chatId)
+            ).data.userId
+          );
+
+        allow create: if isSignedIn()
+          && (
+            isAdmin()
+            || request.auth.uid == get(
+              /databases/$(database)/documents/reservas/$(chatId)
+            ).data.userId
+          );
+
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    /* ========= REVIEWS / COMENTARIOS ========= */
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+
+      // Admin puede hacer todo sin restricciones (seed, moderación, etc.)
+      allow write: if isAdmin();
+
+      // Usuario autenticado puede crear reseña si la reserva le pertenece
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.reservaId is string
+        && get(/databases/$(database)/documents/reservas/$(request.resource.data.reservaId)).data.userId == request.auth.uid;
+    }
+
+    /* ========= REGISTRO DE VIAJEROS (Orden INT/1922/2003) ========= */
+
+    match /registro_viajeros/{registroId} {
+      allow read: if isAdmin();
+      allow write: if false;  // solo Admin SDK del webhook
+    }
+
+    /* ========= CORTAFUEGOS FINAL ========= */
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

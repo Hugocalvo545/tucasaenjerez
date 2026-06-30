@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "tucasaenjerez-3362a"
+  },
+  "targets": {
+    "tucasaenjerez-3362a": {
+      "hosting": {
+        "main": [
+          "tucasaenjerez-app"
+        ],
+        "admin": [
+          "tucasaenjerez-admin"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

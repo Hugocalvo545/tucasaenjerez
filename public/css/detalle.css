@@ -1,0 +1,1078 @@
+/* ---- Padding extra body para reserve-bar (solo detalle.html) */
+@media (max-width: 980px) and (min-width: 769px) {
+  body { padding-bottom: 68px; }
+}
+@media (max-width: 768px) {
+  /* solo reserve-bar (64px), la bottom-nav fue eliminada */
+  body { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+}
+
+/* =========================
+   LEGACY (no lo rompo)
+   ========================= */
+
+/* Galería: que la columna derecha no recorte */
+.gallery-grid{
+  overflow: hidden;
+}
+
+/* Mantén altura fija, pero que las filas se adapten */
+.gallery-side{
+  height: 320px;
+  padding: 10px;
+  gap: 10px;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+}
+
+/* Thumb ocupa la fila completa sin alturas fijas */
+.gallery-thumb{
+  height: auto;
+  min-height: 0;
+}
+.gallery-thumb img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* =========================
+   FIX LAYOUT SIDEBAR (precio / reservar)
+   - Evita que se vaya fuera a la derecha
+   - Responsive: en pantallas medianas baja debajo
+   ========================= */
+
+.detail-layout{
+  display: block;
+}
+.detail-main{
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 1120px){
+  .detail-layout{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   ANIMACIONES / MICRO
+   ========================= */
+
+.fade-in{
+  opacity: 0;
+  transform: translateY(14px);
+  animation: fadeUp .75s ease forwards;
+}
+@keyframes fadeUp{
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================
+   INLINE LUXURY CAROUSEL
+   - NO recorta: imagen principal en contain
+   - Fondo blur para que quede "full bleed" y luxe
+   ========================= */
+
+.inline-gallery{
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.inline-hero{
+  position: relative;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,.14);
+  background: #101010;
+}
+
+/* fondo blur */
+.inline-hero-bg{
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(26px);
+  transform: scale(1.14);
+  opacity: .45;
+}
+
+/* imagen principal: NO cortar */
+.inline-hero img{
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 520px;
+  object-fit: contain; /* 👈 clave: no recorta */
+  display: block;
+  cursor: pointer;
+  transform: scale(1);
+  transition: transform .9s ease;
+}
+
+/* hover muy sutil (sin recortar) */
+.inline-hero:hover img{
+  transform: scale(1.01);
+}
+
+.inline-nav{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.55);
+  color: #fff;
+  font-weight: 900;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 4;
+  backdrop-filter: blur(6px);
+}
+
+.inline-prev{ left: 16px; }
+.inline-next{ right: 16px; }
+
+.inline-overlay{
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 12px;
+  z-index: 3;
+  background: linear-gradient(to top, rgba(0,0,0,.62), rgba(0,0,0,0));
+}
+
+.inline-count{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.55);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  border: 1px solid rgba(255,255,255,.14);
+  backdrop-filter: blur(6px);
+}
+
+.inline-open{
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.10);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: .25s ease;
+}
+.inline-open:hover{
+  background: rgba(209,176,107,.95);
+  border-color: rgba(209,176,107,.95);
+  color: #111;
+}
+
+.inline-thumbs{
+  display: flex;
+  gap: 12px;
+  padding: 14px 14px 16px 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  background: rgba(255,255,255,.02);
+}
+
+.inline-thumb{
+  flex: 0 0 auto;
+  width: 116px;
+  height: 84px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  opacity: .70;
+  scroll-snap-align: center;
+  background: rgba(255,255,255,.06);
+  transition: .25s ease;
+  padding: 0;
+}
+.inline-thumb img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.inline-thumb.active{
+  opacity: 1;
+  border-color: rgba(209,176,107,.95);
+}
+
+/* =========================
+   META / DESCRIPTION tidy
+   ========================= */
+
+.detail-meta{
+  margin-top: 16px;
+}
+.detail-address{
+  color:#555;
+  font-size:14px;
+}
+
+/* override inline description styling */
+.detail-description{
+  margin-top: 18px;
+}
+.detail-description h3{
+  margin: 0 0 8px 0;
+}
+.detail-description p{
+  color:#333;
+  line-height:1.55;
+  margin:0;
+}
+
+/* =========================
+   Lightbox / Carrusel (modal)
+   ========================= */
+.gallery-lightbox{
+  position: fixed;
+  inset: 0;
+  background: rgba(10,10,10,.78);
+  backdrop-filter: blur(10px);
+  display: none;
+  z-index: 9999;
+  padding: 18px;
+}
+
+.gallery-lightbox.open{
+  display: grid;
+  place-items: center;
+}
+
+.gallery-lightbox .lb-box{
+  width: min(1100px, 96vw);
+  height: min(720px, 86vh);
+  background: rgba(20,20,20,.92);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 18px;
+  box-shadow: 0 20px 80px rgba(0,0,0,.45);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.gallery-lightbox .lb-top{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  color: #fff;
+}
+
+.gallery-lightbox .lb-count{
+  font-weight: 900;
+  font-size: 13px;
+  opacity: .9;
+}
+
+.gallery-lightbox .lb-close{
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.gallery-lightbox .lb-stage{
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  overflow: hidden;
+  background: rgba(0,0,0,.35);
+  padding: 16px 56px;
+  box-sizing: border-box;
+}
+
+.gallery-lightbox .lb-img{
+  max-width: 100%;
+  max-height: 76vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  opacity: 1;
+}
+
+@media (max-width: 768px){
+  .gallery-lightbox .lb-img{
+    max-height: 60vh;
+  }
+}
+
+.gallery-lightbox .lb-nav{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.10);
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.gallery-lightbox .lb-prev{ left: 12px; }
+.gallery-lightbox .lb-next{ right: 12px; }
+
+.gallery-lightbox .lb-bottom{
+  padding: 10px 12px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  background: rgba(255,255,255,.04);
+  border-top: 1px solid rgba(255,255,255,.10);
+}
+
+.gallery-lightbox .lb-thumb{
+  width: 72px;
+  height: 54px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  flex: 0 0 auto;
+  background: rgba(255,255,255,.06);
+}
+
+.gallery-lightbox .lb-thumb img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.gallery-lightbox .lb-thumb.active{
+  border-color: rgba(209,176,107,.95);
+}
+
+/* =========================
+   MAPA LUXURY OSCURO (inline)
+   ========================= */
+
+.detail-location-inline{
+  margin-top: 26px;
+}
+
+.detail-location-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.detail-location-head h3{
+  margin:0;
+}
+
+.detail-map-wrap{
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 20px 70px rgba(0,0,0,.18);
+}
+
+.detail-map{
+  width: 100%;
+  height: 420px;
+  border-radius: 24px;
+}
+
+.map-external-btn{
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.72);
+  border: 1px solid rgba(255,255,255,.12);
+  color: #fff;
+  text-decoration:none;
+  font-size: 13px;
+  font-weight: 800;
+  backdrop-filter: blur(8px);
+  transition: .25s ease;
+}
+
+.map-external-btn:hover{
+  background: rgba(209,176,107,.95);
+  border-color: rgba(209,176,107,.95);
+  color: #111;
+}
+
+/* Glow overlay (sutil) */
+.map-glow{
+  pointer-events:none;
+  position:absolute;
+  inset:0;
+  background: radial-gradient(circle at 40% 40%, rgba(209,176,107,.12), rgba(0,0,0,0) 55%);
+  mix-blend-mode: screen;
+}
+
+.map-disclaimer{
+  margin-top: 10px;
+  font-size: 13px;
+  color: #666;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 820px){
+  .inline-hero img{ height: 380px; }
+  .inline-thumb{ width: 96px; height: 72px; }
+  .detail-map{ height: 340px; }
+  .inline-nav{ width: 40px; height: 40px; }
+}
+
+@media (max-width: 520px){
+  .inline-hero img{ height: 320px; }
+  .inline-prev{ left: 10px; }
+  .inline-next{ right: 10px; }
+  .inline-overlay{ padding: 12px; }
+  .inline-open{ padding: 8px 12px; font-size: 12px; }
+  .inline-count{ font-size: 12px; }
+}
+
+/* =========================
+   BOOKING BAR (CTA bajo galería)
+   ========================= */
+
+.booking-bar{
+  margin-top: 16px;
+  padding: 18px 18px;
+  border-radius: 22px;
+  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(0,0,0,.06);
+  box-shadow: 0 18px 55px rgba(0,0,0,.10);
+  display: grid;
+  grid-template-columns: 220px 1fr 260px;
+  gap: 18px;
+  align-items: center;
+}
+
+.booking-bar__left .price-big{
+  font-size: 34px;
+  font-weight: 900;
+  line-height: 1;
+}
+.booking-bar__left .price-small{
+  margin-top: 4px;
+  opacity: .75;
+}
+.booking-type{
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  opacity: .55;
+}
+
+.booking-perks{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.perk{
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.045);
+  border: 1px solid rgba(0,0,0,.06);
+  font-size: 13px;
+  font-weight: 800;
+  color: #1b1b1b;
+}
+
+.booking-hint{
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(0,0,0,.55);
+}
+
+.booking-bar__right{
+  display: grid;
+  gap: 8px;
+  justify-items: stretch;
+}
+
+.cta-btn--primary{
+  width: 100%;
+  height: 52px;
+  border-radius: 999px;
+  font-weight: 900;
+  letter-spacing: .01em;
+  border: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 18px 45px rgba(0,0,0,.12);
+  transform: translateY(0);
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+.cta-btn--primary:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 22px 60px rgba(0,0,0,.16);
+  filter: saturate(1.05);
+}
+.cta-btn--primary:active{
+  transform: translateY(0);
+  box-shadow: 0 14px 36px rgba(0,0,0,.12);
+}
+
+.cta-subtle{
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  opacity: .6;
+}
+
+/* Responsive */
+@media (max-width: 980px){
+  .booking-bar{
+    grid-template-columns: 1fr;
+  }
+  .booking-bar__right{
+    grid-auto-flow: row;
+  }
+  .booking-bar__left{
+    display:flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .booking-type{ width: 100%; }
+}
+
+/* =========================
+   CALENDARIO — LUXURY + RESPONSIVE 100%
+   (usa tus clases: .calendar-grid, .calendar-day, .day-header, etc.)
+   ========================= */
+
+.calendar-box{
+  width: 100%;
+}
+
+/* La rejilla ocupa siempre el ancho */
+.calendar-grid{
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+}
+
+/* Header de días (Lun, Mar...) */
+.day-header{
+  text-align: center;
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  opacity: .65;
+  padding: 8px 0 2px;
+}
+
+/* Número del día */
+.calendar-daynum{
+  font-weight: 900;
+  font-size: 14px;
+  color: #111;
+}
+
+
+/* Hover (solo si es clickable) */
+.calendar-day.available:hover,
+.calendar-day.checkin-foreign:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 16px 35px rgba(0,0,0,.10);
+  border-color: rgba(209,176,107,.55);
+}
+
+/* Estados */
+.calendar-day.other-month{
+  opacity: .35;
+  box-shadow: none;
+  background: rgba(255,255,255,.40);
+}
+
+.calendar-day.hold{
+  background: rgba(209,176,107,.14);
+  border-color: rgba(209,176,107,.25);
+}
+
+.calendar-day.unpriced{
+  background: rgba(0,0,0,.04);
+  border-color: rgba(0,0,0,.06);
+  box-shadow: none;
+}
+
+/* Selección */
+.calendar-day.selected{
+  background: rgba(209,176,107,.18);
+  border-color: rgba(209,176,107,.75);
+}
+
+.calendar-day.checkout{
+  background: rgba(209,176,107,.18);
+  border-color: rgba(209,176,107,.75);
+}
+
+.calendar-day.range{
+  background: rgba(209,176,107,.10);
+  border-color: rgba(209,176,107,.30);
+}
+
+/* =========================
+   MOBILE: más compacto y usable con dedos
+   ========================= */
+@media (max-width: 640px){
+  .calendar-grid{
+    gap: 7px;
+  }
+
+  .day-header{
+    font-size: 11px;
+    padding: 6px 0 0;
+  }
+
+  .calendar-day{
+    min-height: 64px;
+    padding: 8px 8px 6px;
+    border-radius: 14px;
+  }
+
+  .calendar-daynum{
+    font-size: 13px;
+  }
+}
+
+/* Extra pequeño */
+@media (max-width: 380px){
+  .calendar-day{
+    min-height: 58px;
+    border-radius: 12px;
+  }
+}
+
+/* ===== Calendar layout full width ===== */
+.detail-calendar .calendar-layout{
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 18px;
+  align-items: start;
+}
+
+.detail-calendar .calendar-box{
+  width: 100%;
+  max-width: none; /* clave para que no se “encajone” */
+}
+
+.calendar-summary-card{
+  position: sticky;
+  top: 18px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.10);
+  padding: 16px;
+}
+
+.summary-title{
+  margin: 0 0 10px 0;
+}
+
+.summary-property{
+  display:flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(0,0,0,.03);
+  margin-bottom: 12px;
+}
+
+.summary-img{
+  width: 74px;
+  height: 74px;
+  border-radius: 14px;
+  background: rgba(0,0,0,.08);
+  background-size: cover;
+  background-position: center;
+  flex: 0 0 auto;
+}
+
+.summary-name{ font-weight: 900; }
+.summary-sub{ opacity:.75; font-size: 13px; margin-top: 2px; }
+.summary-price{ margin-top: 8px; font-weight: 900; }
+
+.summary-rows{
+  border-top: 1px solid rgba(0,0,0,.08);
+  margin-top: 10px;
+  padding-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.summary-row{
+  display:flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.summary-cta{
+  width: 100%;
+  margin-top: 12px;
+}
+
+.summary-note{
+  margin-top: 10px;
+  font-size: 13px;
+  opacity: .8;
+}
+
+/* ===== Mobile: stack ===== */
+@media (max-width: 980px){
+  .detail-calendar .calendar-layout{
+    grid-template-columns: 1fr;
+  }
+  .calendar-summary-card{
+    position: relative;
+    top: auto;
+  }
+}
+
+/* =========================
+   CALENDARIO — HOTFIX VISUAL
+   ========================= */
+
+/* 1) Los "past" NO deben parecer "other-month" */
+.calendar-day.past{
+  opacity: .55;
+  background: rgba(0,0,0,.03);
+  border-color: rgba(0,0,0,.06);
+  box-shadow: none;
+}
+.calendar-day.past .calendar-daynum{
+  color: rgba(0,0,0,.42);
+}
+
+/* 2) Alineación consistente: número arriba, precio abajo (sin recortes raros) */
+.calendar-day{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Tu precio estaba absolute; así evita cosas cortadas en celdas estrechas */
+.calendar-price{
+  position: static;
+  align-self: flex-end;
+  margin-top: 8px;
+}
+
+/* 3) Los días "other-month" (relleno) no tienen .calendar-daynum, así que los normalizamos */
+.calendar-day.other-month{
+  display:flex;
+  align-items:flex-start;
+  justify-content:flex-start;
+  padding: 10px 10px 8px;
+  font-weight: 900;
+  font-size: 14px;
+  color: rgba(0,0,0,.28);
+  background: rgba(255,255,255,.40);
+  border: 1px solid rgba(0,0,0,.04);
+  box-shadow: none;
+  opacity: .45; /* un poco más visible que .35 */
+}
+
+/* 4) En móvil, que no se descuadre */
+@media (max-width: 640px){
+  .calendar-day{ min-height: 62px; }
+}
+
+/* =========================
+   REVIEWS / OPINIONES
+   ========================= */
+
+.reviews-section {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 2px solid var(--border, #E7E2D6);
+}
+
+.reviews-section h2 {
+  margin: 0 0 22px;
+  font-size: 1.45rem;
+}
+
+/* Resumen de puntuación media */
+.reviews-summary {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+  padding: 20px 24px;
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid var(--border, #E7E2D6);
+  box-shadow: 0 6px 22px rgba(0,0,0,.05);
+}
+
+.reviews-avg-score {
+  font-size: 3rem;
+  font-weight: 900;
+  font-family: 'Playfair Display', serif;
+  color: #111;
+  line-height: 1;
+}
+
+.reviews-avg-stars {
+  font-size: 1.25rem;
+  color: var(--primary, #C9A96A);
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+.reviews-avg-count {
+  font-size: 0.82rem;
+  color: var(--muted, #8B8B8B);
+  margin-top: 4px;
+}
+
+/* Lista de tarjetas */
+.reviews-list {
+  display: grid;
+  gap: 14px;
+}
+
+.review-card {
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid var(--border, #E7E2D6);
+  box-shadow: 0 4px 16px rgba(0,0,0,.04);
+  padding: 20px 22px;
+  transition: box-shadow .2s ease;
+}
+
+.review-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,.08);
+}
+
+.review-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+/* Avatar circular con iniciales */
+.review-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C9A96A, #A27E45);
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44px;
+  user-select: none;
+}
+
+.review-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.review-author {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.review-date {
+  font-size: 0.78rem;
+  color: var(--muted, #8B8B8B);
+  margin-top: 2px;
+  text-transform: capitalize;
+}
+
+.review-stars {
+  font-size: 1rem;
+  color: var(--primary, #C9A96A);
+  letter-spacing: 1px;
+  flex: 0 0 auto;
+  line-height: 1;
+  padding-top: 2px;
+}
+
+.review-text {
+  margin: 0;
+  font-size: 0.91rem;
+  color: #333;
+  line-height: 1.6;
+}
+
+.review-response {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #f9f6ef;
+  border-left: 3px solid #c9a96a;
+  border-radius: 0 8px 8px 0;
+}
+
+.response-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #a07d3b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 5px;
+}
+
+.review-response p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #555;
+  line-height: 1.55;
+}
+
+/* Estado vacío */
+.reviews-empty {
+  text-align: center;
+  padding: 36px 20px;
+  color: var(--muted, #8B8B8B);
+  font-size: 0.95rem;
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid var(--border, #E7E2D6);
+}
+
+/* Botón "Ver más" */
+.reviews-more-btn {
+  display: block;
+  margin: 20px auto 0;
+  padding: 10px 28px;
+  border-radius: 999px;
+  border: 1.5px solid var(--primary, #C9A96A);
+  background: transparent;
+  color: var(--primary-700, #A27E45);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s ease, color .2s ease;
+}
+
+.reviews-more-btn:hover {
+  background: var(--primary, #C9A96A);
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .reviews-avg-score { font-size: 2.4rem; }
+  .review-card { padding: 16px; }
+  .review-avatar { width: 38px; height: 38px; flex-basis: 38px; font-size: 13px; }
+}
+
+/* =========================
+   RESPONSIVE FIXES
+   ========================= */
+
+/* Inline hero: altura progresiva para pantallas pequeñas */
+@media (max-width: 480px) {
+  .inline-hero img {
+    height: 280px;
+  }
+  .inline-thumbs {
+    padding: 8px 10px 12px;
+    gap: 8px;
+  }
+  .inline-thumb {
+    width: 80px;
+    height: 58px;
+  }
+}
+
+@media (max-width: 375px) {
+  .inline-hero img {
+    height: 240px;
+  }
+  .inline-thumb {
+    width: 68px;
+    height: 50px;
+  }
+}
+
+/* Mapa de detalle: altura reducida en móvil */
+@media (max-width: 480px) {
+  .detail-map {
+    height: 260px;
+    border-radius: 16px;
+  }
+}
+
+@media (max-width: 375px) {
+  .detail-map {
+    height: 220px;
+  }
+}
+
+/* Calendar summary card: sin sticky en móvil */
+@media (max-width: 600px) {
+  .calendar-summary-card {
+    position: static;
+    top: auto;
+  }
+}
+
+/* Botones de navegación galería: más accesibles en táctil */
+@media (max-width: 480px) {
+  .inline-nav {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+  .inline-prev { left: 8px; }
+  .inline-next { right: 8px; }
+}
+
+/* Reviews: resumen en columna en móvil */
+@media (max-width: 480px) {
+  .reviews-summary {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 14px 16px;
+  }
+}
+

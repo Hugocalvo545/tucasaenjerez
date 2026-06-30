@@ -1,0 +1,310 @@
+<!-- multi/index.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Alojamientos · JLA Apartments</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#C9A96A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="JLA Apartments">
+  <link rel="apple-touch-icon" href="/img/icon-192.png">
+  <link rel="icon" href="/img/icon-192.png">
+
+  <!-- Design system base (tokens + componentes) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/design-system.css">
+
+  <!-- CSS global + overrides multi -->
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/multi-overrides.css">
+  <!-- Nav superior única consolidada (cargar DESPUÉS de multi-overrides.css) -->
+  <link rel="stylesheet" href="../css/multi-nav.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.21.0/dist/tabler-icons.min.css">
+</head>
+
+<body>
+
+
+  <!-- =======================
+       TOPBAR
+  ======================== -->
+  <header class="multi-topbar">
+    <a class="multi-brand" href="https://tucasaenjerez.com/" aria-label="Tu Casa en Jerez">
+      <i class="ti ti-building-community multi-brand__icon"></i>
+      <span class="multi-brand__text">Tu Casa en Jerez</span>
+    </a>
+    <nav class="multi-nav" aria-label="Navegación principal">
+      <!-- PRODUCCIÓN: enlace externo a la web principal (mantiene SSO via .multi-topbar-back) -->
+      <a class="multi-nav__link multi-topbar-back" href="https://tucasaenjerez.com/" aria-label="Inicio">
+        <i class="ti ti-home" aria-hidden="true"></i><span>Inicio</span>
+      </a>
+      <a class="multi-nav__link is-active" aria-current="page" href="./index.html" aria-label="Apartamentos">
+        <i class="ti ti-building" aria-hidden="true"></i><span>Apartamentos</span>
+      </a>
+      <a class="multi-nav__link" href="../perfil/index-usuario.html#reservas" aria-label="Reservas">
+        <i class="ti ti-calendar-event" aria-hidden="true"></i><span>Reservas</span>
+      </a>
+      <a class="multi-nav__link" href="../perfil/index-usuario.html" aria-label="Perfil">
+        <i class="ti ti-user" aria-hidden="true"></i><span>Perfil</span>
+      </a>
+    </nav>
+  </header>
+
+  <!-- =======================
+       PAGE
+  ======================== -->
+  <div class="multi-container">
+    <header class="multi-header">
+      <div>
+        <p class="multi-kicker">Explora nuestros alojamientos</p>
+        <h1>Apartamentos y packs disponibles</h1>
+        <p class="multi-subtitle">
+          Elige el alojamiento que mejor encaje contigo y continúa para ver los detalles y reservar.
+        </p>
+      </div>
+
+      <div class="multi-summary">
+        <span id="resultsCount">Cargando alojamientos...</span>
+      </div>
+    </header>
+
+    <!-- =======================
+         FILTROS
+    ======================== -->
+    <button class="filters-toggle" onclick="openFiltersDrawer()">
+      <i class="ti ti-adjustments-horizontal"></i> Filtros
+    </button>
+    <section class="multi-filters" id="mainFilters">
+      <div class="filters-drawer-header">
+        <span>Filtros de búsqueda</span>
+        <button class="filters-close" onclick="closeFiltersDrawer()" aria-label="Cerrar">×</button>
+      </div>
+      <div class="filter-group">
+        <label for="filterType">Tipo</label>
+        <select id="filterType">
+          <option value="all">Todos</option>
+          <option value="apto">Apartamentos</option>
+          <option value="pack">Packs</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="filterCity">Ciudad</label>
+        <select id="filterCity">
+          <option value="all">Todas</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="filterGuests">Huéspedes</label>
+        <input
+          id="filterGuests"
+          type="number"
+          min="1"
+          max="8"
+          step="1"
+          value="2"
+        />
+      </div>
+      <div class="filter-group">
+        <label for="filterCheckIn">Entrada</label>
+        <input type="date" id="filterCheckIn">
+      </div>
+
+      <div class="filter-group">
+        <label for="filterCheckOut">Salida</label>
+        <input type="date" id="filterCheckOut">
+      </div>
+
+      <div class="filter-group filter-actions">
+        <label>Aplicar Fechas</label>
+        <button id="filterApplyDates" class="btn-primary btn-fecha">Buscar</button>
+      </div>
+      <div class="filter-group filter-actions">
+        <label>Limpiar Fechas</label>
+        <button id="filterClearDates" class="btn-ghost btn-fecha">Limpiar</button>
+      </div>
+    </section>
+
+    <!-- =======================
+         LISTADO + MAPA
+    ======================== -->
+    <div class="map-toggle-wrap">
+      <button class="map-toggle" id="mapToggleBtn" onclick="toggleMapView()">
+        <i class="ti ti-map-2"></i> Ver mapa
+      </button>
+    </div>
+    <main class="multi-main">
+      <section class="multi-list">
+        <div id="propertiesGrid" class="properties-grid"></div>
+      </section>
+
+      <aside class="multi-map">
+        <div id="map" class="map-container"></div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- =======================
+       FIREBASE COMPAT
+  ======================== -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+
+  <!-- =======================
+       GOOGLE MAPS CALLBACK WRAPPER
+  ======================== -->
+
+  <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
+  <script>
+    window.__initMapImpl = null;
+    window.__initMapPending = false;
+
+    window.initMap = function () {
+      if (typeof window.__initMapImpl === 'function') {
+        window.__initMapPending = false;
+        return window.__initMapImpl();
+      }
+      window.__initMapPending = true;
+      console.warn('initMap llamado antes de que app-multi esté listo. Queda pendiente.');
+    };
+  </script>
+
+  <!-- Google Maps -->
+  <script
+    async
+    defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBu5wLUu6bovJKnFBmqIFXymF-9ShNwrcU&callback=initMap">
+  </script>
+
+  <!-- ENV -->
+  <script src="../shared/env.js"></script>
+
+  <!-- App -->
+  <script type="module" src="./app-multi.js"></script>
+
+  <!-- Registro del Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      let swReloading = false;
+      navigator.serviceWorker.register('/sw.js').then((reg) => {
+        reg.update().catch(() => {});
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+              if (!swReloading) { swReloading = true; window.location.reload(); }
+            }
+          });
+        });
+      }).catch((e) => console.warn('[SW] No registrado:', e));
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!swReloading) { swReloading = true; window.location.reload(); }
+      });
+    }
+  </script>
+
+  <!-- Banner de cookies -->
+  <div id="cookieBanner" style="
+    display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
+    background:#1a1a1a;color:#fff;padding:14px 20px;
+    align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    font-family:Arial,sans-serif;font-size:14px;
+  ">
+    <p style="margin:0;">
+      Usamos cookies técnicas necesarias para el funcionamiento de la web.
+      <a href="/privacidad.html" style="color:#f2b544;text-decoration:none;">Más información</a>
+    </p>
+    <button onclick="acceptCookies()" style="
+      background:#f2b544;color:#1a1a1a;border:none;border-radius:6px;
+      padding:8px 18px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;
+    ">Aceptar</button>
+  </div>
+  <script>
+    if (!localStorage.getItem('cookiesAccepted')) {
+      document.getElementById('cookieBanner').style.display = 'flex';
+    }
+    function acceptCookies() {
+      localStorage.setItem('cookiesAccepted', '1');
+      document.getElementById('cookieBanner').style.display = 'none';
+    }
+  </script>
+
+  <!-- Backdrop filtros -->
+  <div id="filtersBackdrop" class="filters-backdrop"></div>
+
+  <!-- Interacciones móvil: filtros drawer + mapa/lista toggle -->
+  <script>
+    (function() {
+      var filtersEl  = document.getElementById('mainFilters');
+      var backdropEl = document.getElementById('filtersBackdrop');
+      var mapEl, listEl, toggleBtn;
+
+      function getEls() {
+        if (!mapEl)     mapEl     = document.querySelector('.multi-map');
+        if (!listEl)    listEl    = document.querySelector('.multi-list');
+        if (!toggleBtn) toggleBtn = document.getElementById('mapToggleBtn');
+      }
+
+      window.openFiltersDrawer = function() {
+        filtersEl.classList.add('multi-filters--drawer');
+        backdropEl.classList.add('is-active');
+        document.body.style.overflow = 'hidden';
+      };
+      window.closeFiltersDrawer = function() {
+        filtersEl.classList.remove('multi-filters--drawer');
+        backdropEl.classList.remove('is-active');
+        document.body.style.overflow = '';
+      };
+
+      function setMapView(showMap) {
+        getEls();
+        if (!mapEl || !listEl) return;
+        if (showMap) {
+          mapEl.classList.remove('is-map-hidden');
+          listEl.classList.add('is-list-hidden');
+          if (toggleBtn) toggleBtn.innerHTML = '<i class="ti ti-list"></i> Ver lista';
+        } else {
+          mapEl.classList.add('is-map-hidden');
+          listEl.classList.remove('is-list-hidden');
+          if (toggleBtn) toggleBtn.innerHTML = '<i class="ti ti-map-2"></i> Ver mapa';
+        }
+      }
+
+      window.toggleMapView = function() {
+        getEls();
+        if (mapEl) setMapView(mapEl.classList.contains('is-map-hidden'));
+      };
+
+      function initView() {
+        if (window.innerWidth <= 900) setMapView(false);
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initView);
+      } else {
+        initView();
+      }
+
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 900) {
+          getEls();
+          if (mapEl)  mapEl.classList.remove('is-map-hidden');
+          if (listEl) listEl.classList.remove('is-list-hidden');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

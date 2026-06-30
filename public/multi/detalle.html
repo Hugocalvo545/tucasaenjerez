@@ -1,0 +1,297 @@
+<!-- multi/detalle.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Detalle del alojamiento · JLA Apartments</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#C9A96A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="JLA Apartments">
+  <link rel="apple-touch-icon" href="/img/icon-192.png">
+  <link rel="icon" href="/img/icon-192.png">
+
+  <!-- Design system base (tokens + componentes) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/design-system.css">
+
+  <!-- CSS global + overrides multi -->
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/multi-overrides.css">
+  <!-- Nav superior única consolidada (cargar DESPUÉS de multi-overrides.css) -->
+  <link rel="stylesheet" href="../css/multi-nav.css">
+  <!-- detalle.css siempre por encima del resto -->
+  <link rel="stylesheet" href="../css/detalle.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.21.0/dist/tabler-icons.min.css">
+</head>
+
+<body>
+
+  <!-- =======================
+       TOPBAR
+  ======================== -->
+  <header class="multi-topbar">
+    <a class="multi-brand" href="https://tucasaenjerez.com/" aria-label="Tu Casa en Jerez">
+      <i class="ti ti-building-community multi-brand__icon"></i>
+      <span class="multi-brand__text">Tu Casa en Jerez</span>
+    </a>
+    <nav class="multi-nav" aria-label="Navegación principal">
+      <!-- PRODUCCIÓN: enlace externo a la web principal (mantiene SSO via .multi-topbar-back) -->
+      <a class="multi-nav__link multi-topbar-back" href="https://tucasaenjerez.com/" aria-label="Inicio">
+        <i class="ti ti-home" aria-hidden="true"></i><span>Inicio</span>
+      </a>
+      <a class="multi-nav__link is-active" aria-current="page" href="./index.html" aria-label="Apartamentos">
+        <i class="ti ti-building" aria-hidden="true"></i><span>Apartamentos</span>
+      </a>
+      <a class="multi-nav__link" href="../perfil/index-usuario.html#reservas" aria-label="Reservas">
+        <i class="ti ti-calendar-event" aria-hidden="true"></i><span>Reservas</span>
+      </a>
+      <a class="multi-nav__link" href="../perfil/index-usuario.html" aria-label="Perfil">
+        <i class="ti ti-user" aria-hidden="true"></i><span>Perfil</span>
+      </a>
+    </nav>
+  </header>
+
+  <!-- =======================
+       DETAIL PAGE
+  ======================== -->
+  <main class="detail-container">
+    <button id="backBtn" class="btn-secondary" type="button">← Volver</button>
+
+    <!-- Cabecera -->
+    <header class="detail-header">
+      <p class="detail-breadcrumb">Alojamientos · Detalle</p>
+
+      <div class="detail-header-main">
+        <div>
+          <h1 id="detailTitle">Alojamiento</h1>
+          <p id="detailTagline" class="detail-tagline">
+            Tu base perfecta para descubrir la zona.
+          </p>
+        </div>
+
+        <div class="detail-trust">
+          <span>✔ Reserva directa</span>
+          <span>✔ Sin intermediarios</span>
+          <span>✔ Confirmación por email</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Contenido dinámico (galería + descripción + sidebar + mapa inline, lo pinta detalle-app.js) -->
+    <section id="detailContent">
+      <p class="muted">Cargando alojamiento...</p>
+    </section>
+
+    <!-- =======================
+         CALENDARIO
+    ======================== -->
+    <section id="detailCalendarSection" class="detail-calendar">
+      <h2>Elige tus fechas</h2>
+      <p class="calendar-intro">
+        La disponibilidad se actualiza en tiempo real. Selecciona las fechas que mejor te encajen
+        y después pulsa <strong>“Reservar ahora”</strong> para completar tu reserva.
+      </p>
+
+      <div class="calendar-box">
+        <div class="calendar-header">
+          <h3 id="calendarMonth">Mes actual</h3>
+
+          <div class="calendar-nav">
+            <button type="button" class="btn-secondary" onclick="previousMonth()">← Anterior</button>
+            <button type="button" class="btn-secondary" onclick="nextMonth()">Siguiente →</button>
+          </div>
+        </div>
+
+        <div class="calendar-layout">
+          <div class="calendar-main">
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <div id="calendarInfo" class="calendar-info-extra"></div>
+          </div>
+
+          <aside class="calendar-aside">
+            <div class="reserve-summary">
+              <h3 class="reserve-summary__title">Tu reserva</h3>
+
+              <div class="reserve-summary__rows">
+                <div class="row"><span>Entrada</span><strong id="summaryCheckIn">-</strong></div>
+                <div class="row"><span>Salida</span><strong id="summaryCheckOut">-</strong></div>
+                <div class="row"><span>Noches</span><strong id="summaryNights">-</strong></div>
+              </div>
+
+              <button class="cta-btn cta-btn--primary" type="button" id="reserveBtnSide">
+                Reservar ahora
+              </button>
+
+              <p class="reserve-summary__fineprint">
+                Bloqueamos tus fechas durante unos minutos mientras completas tus datos.
+              </p>
+            </div>
+          </aside>
+        </div>
+
+        <!-- CTA login (lo muestra/oculta detalle-app.js) -->
+        <div id="loginCtaDetail" class="login-cta" style="display:none;">
+          <div class="login-cta-title">Para reservar necesitas una cuenta</div>
+          <div class="login-cta-text">
+            Inicia sesión o regístrate en 1 minuto para bloquear tus fechas y confirmar la reserva.
+          </div>
+          <div class="login-cta-actions">
+            <a class="login-cta-btn" href="../perfil/index-usuario.html">Inicia sesión</a>
+            <a class="login-cta-btn primary" href="../perfil/index-usuario.html#register">Regístrate</a>
+          </div>
+        </div>
+
+        <div class="calendar-legend">
+          <div class="legend-item">
+            <div class="legend-color available"></div><span>Disponible</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color occupied"></div><span>No disponible</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color hold"></div><span>En proceso</span>
+          </div>
+        </div>
+
+        <p class="calendar-hold-note">
+          Cuando avances a la reserva, bloquearemos tus fechas durante unos minutos mientras
+          completas tus datos. Así nadie más puede reservarlas en ese tiempo.
+        </p>
+      </div>
+    </section>
+
+    <!-- =======================
+         OPINIONES DE HUÉSPEDES
+    ======================== -->
+    <section id="reviewsSection" class="reviews-section"></section>
+
+    <!-- =======================
+         CTA FINAL
+    ======================== -->
+    <div class="detail-actions" id="detailActions" style="display:none;">
+      <button id="reserveBtn" class="btn-primary" type="button">Reservar ahora</button>
+      <p class="secure-note">✅ Reserva segura, sin cargos ocultos. Tus datos están protegidos.</p>
+    </div>
+  </main>
+
+  <!-- =======================
+       FIREBASE COMPAT
+  ======================== -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+
+  <script>
+    window.__initMapImpl = null;
+    window.__initMapPending = false;
+
+    window.initMap = function () {
+      if (typeof window.__initMapImpl === 'function') {
+        window.__initMapPending = false;
+        return window.__initMapImpl();
+      }
+      window.__initMapPending = true;
+      console.warn('initMap llamado antes de que detalle-app esté listo. Queda pendiente.');
+    };
+  </script>
+
+  <!-- Google Maps -->
+  <script
+    async
+    defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBu5wLUu6bovJKnFBmqIFXymF-9ShNwrcU&callback=initMap">
+  </script>
+
+  <!-- ENV -->
+  <script src="../shared/env.js"></script>
+
+  <!-- App -->
+  <script type="module" src="./detalle-app.js"></script>
+
+  <!-- Reserve bar (móvil ≤980px) -->
+  <div class="reserve-bar">
+    <div class="reserve-bar__price">
+      <span class="reserve-bar__label">Precio / noche</span>
+      <span class="reserve-bar__value" id="reserveBarPrice"></span>
+    </div>
+    <button class="reserve-bar__btn" onclick="document.getElementById('reserveBtnSide').click()">
+      Reservar ahora
+    </button>
+  </div>
+
+
+  <!-- Actualiza precio en reserve bar cuando detalle-app.js lo pinta -->
+  <script>
+    (function() {
+      var bar = document.getElementById('reserveBarPrice');
+      if (!bar) return;
+      function tryUpdate() {
+        var pb = document.querySelector('.price-big');
+        if (pb && pb.textContent.trim()) { bar.textContent = pb.textContent.trim(); return true; }
+        return false;
+      }
+      if (!tryUpdate()) {
+        var obs = new MutationObserver(function() { if (tryUpdate()) obs.disconnect(); });
+        obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+      }
+    })();
+  </script>
+
+  <!-- Banner de cookies -->
+  <div id="cookieBanner" style="
+    display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
+    background:#1a1a1a;color:#fff;padding:14px 20px;
+    align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    font-family:Arial,sans-serif;font-size:14px;
+  ">
+    <p style="margin:0;">
+      Usamos cookies técnicas necesarias para el funcionamiento de la web.
+      <a href="/privacidad.html" style="color:#f2b544;text-decoration:none;">Más información</a>
+    </p>
+    <button onclick="acceptCookies()" style="
+      background:#f2b544;color:#1a1a1a;border:none;border-radius:6px;
+      padding:8px 18px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;
+    ">Aceptar</button>
+  </div>
+  <script>
+    if (!localStorage.getItem('cookiesAccepted')) {
+      document.getElementById('cookieBanner').style.display = 'flex';
+    }
+    function acceptCookies() {
+      localStorage.setItem('cookiesAccepted', '1');
+      document.getElementById('cookieBanner').style.display = 'none';
+    }
+  </script>
+
+  <!-- Registro del Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      let swReloading = false;
+      navigator.serviceWorker.register('/sw.js').then((reg) => {
+        reg.update().catch(() => {});
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+              if (!swReloading) { swReloading = true; window.location.reload(); }
+            }
+          });
+        });
+      }).catch((e) => console.warn('[SW] No registrado:', e));
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!swReloading) { swReloading = true; window.location.reload(); }
+      });
+    }
+  </script>
+</body>
+</html>
