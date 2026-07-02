@@ -1,6 +1,7 @@
 import { db } from '../shared/firebase.js';
 import { state } from '../shared/state.js';
-import { HOLD_MINUTES, MS_PER_DAY, PRICE_PER_NIGHT } from '../shared/config.js';
+import { HOLD_MINUTES, MS_PER_DAY, PRICE_PER_NIGHT, PACK_PCT_DEFAULT } from '../shared/config.js';
+import { packNightlyPriceFromUnits } from '../shared/pack-pricing.js';
 
 function getCurrentPropertyId() {
   return state.currentPropertyId || 'atico-jerez';
@@ -546,6 +547,53 @@ export function setUpRealtimePrices() {
   state.priceUnsub?.();
   state.priceMap = new Map();
 
+  // ── MODO PACK: el precio NO se lee de /packs/{id}/prices (congelado); se DERIVA en tiempo real
+  // de las unidades. Nos suscribimos a /apartamentos/{unidad}/prices de cada unidad y combinamos:
+  // una noche solo entra en priceMap si TODAS las unidades tienen precio esa noche
+  // (packNightlyPriceFromUnits devuelve null si falta alguna) ⇒ "reservable sii todas priced".
+  if (state.currentPropertyTipo === 'pack') {
+    const unitIds = getAvailabilityPropertyIds(); // IDs de las unidades del pack
+    if (unitIds.length < 2) { renderCalendar(); return; }
+
+    const unitMaps = unitIds.map(() => new Map());
+
+    const recompute = () => {
+      // pct SIEMPRE en vivo desde state (lo fija checkout/ficha desde el doc del pack ANTES de
+      // suscribir). Leerlo aquí en cada recomposición —en vez de capturarlo una vez— elimina
+      // cualquier ventana en la que se cobrara con el 85 por defecto si el doc dijera otra cosa.
+      const pct = state.currentPackPct ?? PACK_PCT_DEFAULT;
+      const combined = new Map();
+      const firstMap = unitMaps[0];
+      for (const iso of firstMap.keys()) {
+        const prices = unitMaps.map((m) => m.get(iso));
+        const derived = packNightlyPriceFromUnits(prices, pct);
+        if (derived != null) combined.set(iso, derived);
+      }
+      state.priceMap = combined;
+      renderCalendar();
+      try { window.calculatePrice?.({ advance: false }); } catch (_) {}
+    };
+
+    const unsubs = unitIds.map((uid, idx) =>
+      db.collection('apartamentos').doc(uid).collection('prices').onSnapshot(
+        (qs) => {
+          const m = new Map();
+          qs.forEach((d) => {
+            const data = d.data();
+            if (data?.dateISO && typeof data.price === 'number') m.set(data.dateISO, data.price);
+          });
+          unitMaps[idx] = m;
+          recompute();
+        },
+        (err) => console.error('❌ ERROR snapshot PRICES (pack unit) =>', 'unit:', uid, err)
+      )
+    );
+
+    state.priceUnsub = () => unsubs.forEach((u) => { try { u(); } catch (_) {} });
+    return;
+  }
+
+  // ── MODO APARTAMENTO: sin cambios ──────────────────────────────────────────
   const propertyId = getCurrentPropertyId();
   if (!propertyId) return;
 

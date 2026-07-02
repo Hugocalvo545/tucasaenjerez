@@ -1,5 +1,6 @@
 import { db, auth } from '../shared/firebase.js';
 import { state } from '../shared/state.js';
+import { packBasePrice, resolvePackPct } from '../shared/pack-pricing.js';
 
 import {
   renderCalendar,
@@ -735,6 +736,30 @@ async function loadDetail() {
     }
 
     const data = snap.data() || {};
+
+    // PACK: derivar el precio de las unidades (packPct × (A + B)); NO usar el precioBase guardado.
+    // Sobrescribimos data.precioBase en memoria para que ficha (display) y el base del calendario
+    // usen el derivado. currentPackPct se fija antes de setUpRealtimePrices (dentro de initCalendar…).
+    if (tipo === 'pack') {
+      const sp = Array.isArray(data.sourceProperties) ? data.sourceProperties : [];
+      const pct = resolvePackPct(data);
+      state.currentPackPct = pct;
+      if (sp.length >= 2) {
+        const [aptA, aptB] = await Promise.all([
+          db.collection('apartamentos').doc(sp[0]).get(),
+          db.collection('apartamentos').doc(sp[1]).get(),
+        ]);
+        const derived = packBasePrice(
+          Number(aptA.data()?.precioBase),
+          Number(aptB.data()?.precioBase),
+          pct
+        );
+        if (derived != null) data.precioBase = derived;
+      }
+    } else {
+      state.currentPackPct = null;
+    }
+
     renderDetailIntoContent(data, tipo);
     loadReviews(snap.id);
     state.currentPropertySourceProperties = Array.isArray(data.sourceProperties)

@@ -2,6 +2,9 @@ export const PRICE_PER_NIGHT = 68;
 export const HOLD_MINUTES = 15;
 export const MS_PER_DAY = 24 * 60 * 60 * 1000;
 export const CANCEL_POLICY_DAYS = 5; // días antes del check-in hasta los que se permite cancelar
+// Porcentaje por defecto del pack sobre la suma de sus unidades (packPct real vive en /packs/{id}.packPct).
+// Fuente única del default: no volver a hardcodear "85" suelto por el código.
+export const PACK_PCT_DEFAULT = 85;
 
 // PRODUCCIÓN: actualizar estas tres URLs al dominio real antes del lanzamiento.
 // Buscar en el proyecto los comentarios "// PRODUCCIÓN: URL" para localizarlas todas.

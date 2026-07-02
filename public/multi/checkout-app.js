@@ -1,6 +1,7 @@
 import { db, auth } from '../shared/firebase.js';
 import { state } from '../shared/state.js';
 import { PRICE_PER_NIGHT, calculateLevel } from '../shared/config.js';
+import { packBasePrice, resolvePackPct } from '../shared/pack-pricing.js';
 
 import {
   renderCalendar,
@@ -171,6 +172,7 @@ async function setupPropertyContextFromUrl() {
   const tipo = params.get('tipo') || 'apto';
 
   state.currentPropertyTipo = tipo;
+  state.currentPackPct = null; // se fija abajo si es pack; null en aptos/errores
 
   if (!id) {
     state.currentPropertyId = 'atico-jerez';
@@ -195,12 +197,35 @@ async function setupPropertyContextFromUrl() {
 
       state.currentPropertyId = snap.id;
       state.currentPropertyName = data.nombre || 'Alojamiento';
-      state.currentPricePerNight =
-        typeof data.precioBase === 'number' ? data.precioBase : PRICE_PER_NIGHT;
       state.currentPropertyMinNights = (data.minNights > 0) ? data.minNights : 1;
       state.currentPropertySourceProperties = Array.isArray(data.sourceProperties)
         ? data.sourceProperties
         : [];
+
+      if (tipo === 'pack') {
+        // PACK: base derivado de las unidades (packPct × (A + B)); NO el precioBase guardado.
+        // El precio real por-noche vendrá del priceMap combinado (setUpRealtimePrices modo pack).
+        const pct = resolvePackPct(data);
+        state.currentPackPct = pct;
+        const sp = state.currentPropertySourceProperties;
+        let derived = null;
+        if (sp.length >= 2) {
+          const [aptA, aptB] = await Promise.all([
+            db.collection('apartamentos').doc(sp[0]).get(),
+            db.collection('apartamentos').doc(sp[1]).get(),
+          ]);
+          derived = packBasePrice(
+            Number(aptA.data()?.precioBase),
+            Number(aptB.data()?.precioBase),
+            pct
+          );
+        }
+        state.currentPricePerNight = derived != null ? derived : PRICE_PER_NIGHT;
+      } else {
+        state.currentPackPct = null;
+        state.currentPricePerNight =
+          typeof data.precioBase === 'number' ? data.precioBase : PRICE_PER_NIGHT;
+      }
     } else {
       state.currentPropertyId = id;
       state.currentPropertyName = 'Alojamiento';

@@ -311,11 +311,11 @@ export function createSpecialPricesUI({
       packsCache = [];
     }
 
-    const packGroup = packsCache.length
-      ? `<optgroup label="Packs">${packsCache.map(p => `<option value="pack:${p.id}">${escapeHtml(p.nombre || p.id)}</option>`).join("")}</optgroup>`
-      : "";
-
-    const fullOpts = apartOpts + packGroup;
+    // Los packs NO se ofrecen como destino de precios especiales: su precio se deriva de las
+    // unidades (packPct × (A + B)) y ya no se leen overrides propios del pack. Incluirlos aquí
+    // sería un control que miente (fijaría un precio que no hace nada). Los precios especiales
+    // se aplican a los APARTAMENTOS; el pack los hereda automáticamente.
+    const fullOpts = apartOpts;
 
     if (spProperty) spProperty.innerHTML = fullOpts;
     if (seasonProperty) seasonProperty.innerHTML = fullOpts;

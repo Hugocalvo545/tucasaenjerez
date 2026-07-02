@@ -2,6 +2,7 @@ import { subscribeApartamentosActivos, subscribePacksActivos } from './propertie
 import { auth, db } from '../shared/firebase.js';
 import { state } from '../shared/state.js';
 import { applyURLParams } from './url-params.js';
+import { packBasePrice, resolvePackPct } from '../shared/pack-pricing.js';
 
 function initAuthButtons() {
   auth.onAuthStateChanged((user) => {
@@ -626,16 +627,15 @@ function rebuildAllItemsFromRT(aptos, packs) {
   const aptoItems = aptos.map((a) => ({ ...normalizeItem(a), _tipo: 'apto' }));
   const packItems = packs.map((p) => ({ ...normalizeItem(p), _tipo: 'pack' }));
 
-  // Mejora 1: calcular precio real del pack a partir de sus apartamentos fuente
+  // El precio del pack se DERIVA de sus unidades con el helper canónico (packPct × (A + B)).
   packItems.forEach(pack => {
     const sp = Array.isArray(pack.sourceProperties) ? pack.sourceProperties : [];
     if (sp.length >= 2) {
       const apt1 = aptoItems.find(a => a.id === sp[0]);
       const apt2 = aptoItems.find(a => a.id === sp[1]);
-      if (apt1 && apt2 && typeof apt1.precioBase === 'number' && typeof apt2.precioBase === 'number') {
-        pack.precioBase = Math.round(
-          (apt1.precioBase + apt2.precioBase) * ((pack.packPct ?? 85) / 100)
-        );
+      if (apt1 && apt2) {
+        const derived = packBasePrice(apt1.precioBase, apt2.precioBase, resolvePackPct(pack));
+        if (derived != null) pack.precioBase = derived;
       }
     }
   });

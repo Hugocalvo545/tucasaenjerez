@@ -1,4 +1,6 @@
 import { setButtonLoading } from "../../shared/utils.js";
+// Precio de pack derivado (espejo solo-display; canónico en public/shared/pack-pricing.js)
+import { packBasePrice, resolvePackPct } from "./pack-pricing.js";
 
 export function createPacksUI({ db, storage, serverTimestamp, fetchPacks, savePack, packCalendar, getPropertiesCache }) {
   const events = new AbortController();
@@ -62,12 +64,13 @@ export function createPacksUI({ db, storage, serverTimestamp, fetchPacks, savePa
 
   function computeAutoPrice(pack) {
     const sp = Array.isArray(pack?.sourceProperties) ? pack.sourceProperties : [];
-    if (!sp.length) return null;
+    if (sp.length < 2) return null;
     const props = getPropertiesCache?.() || [];
-    const pct = Number(packPctInput?.value || pack?.packPct || 85) / 100;
-    const precio1 = Number(props.find(x => x.id === sp[0])?.precioBase || 0);
-    const precio2 = sp[1] ? Number(props.find(x => x.id === sp[1])?.precioBase || 0) : 0;
-    return Math.round((precio1 + precio2) * pct);
+    // El % en vivo del formulario tiene prioridad sobre el guardado (preview mientras se edita).
+    const pctVal = packPctInput?.value || pack?.packPct;
+    const precio1 = Number(props.find(x => x.id === sp[0])?.precioBase);
+    const precio2 = Number(props.find(x => x.id === sp[1])?.precioBase);
+    return packBasePrice(precio1, precio2, pctVal);
   }
 
   function updateCalcPrecio() {
@@ -746,10 +749,10 @@ export function createPacksUI({ db, storage, serverTimestamp, fetchPacks, savePa
     packsBody.innerHTML = packsCache.map((p) => {
       const _props = getPropertiesCache?.() || [];
       const _sp = p.sourceProperties || [];
-      const _pct = (p.packPct ?? 85) / 100;
-      const _p1 = Number(_props.find(x => x.id === _sp[0])?.precioBase || 0);
-      const _p2 = _sp[1] ? Number(_props.find(x => x.id === _sp[1])?.precioBase || 0) : 0;
-      const precio = _sp.length ? `${Math.round((_p1 + _p2) * _pct)}€` : "—";
+      const _p1 = Number(_props.find(x => x.id === _sp[0])?.precioBase);
+      const _p2 = Number(_props.find(x => x.id === _sp[1])?.precioBase);
+      const _derived = _sp.length >= 2 ? packBasePrice(_p1, _p2, resolvePackPct(p)) : null;
+      const precio = _derived != null ? `${_derived}€` : "—";
       const isSel = selectedPack?.id && p.id === selectedPack.id;
       return `
         <tr data-row-id="${escapeHtml(p.id)}" class="${isSel ? "is-selected" : ""}">

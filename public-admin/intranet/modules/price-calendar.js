@@ -1,3 +1,6 @@
+// Precio de pack derivado (espejo solo-display; canónico en public/shared/pack-pricing.js)
+import { packBasePrice, resolvePackPct, PACK_PCT_DEFAULT } from "./pack-pricing.js";
+
 export function createPriceCalendar({ db, serverTimestamp, escapeHtml }) {
   const calTitle = document.getElementById("pcalTitle");
   const calPrev = document.getElementById("pcalPrev");
@@ -101,11 +104,11 @@ export function createPriceCalendar({ db, serverTimestamp, escapeHtml }) {
 
     if (calTitle) calTitle.textContent = `Precios · ${pn || pid}`;
 
-    let packPct = 85;
+    let packPct = PACK_PCT_DEFAULT;
     try {
       const parentDoc = await db.collection("packs").doc(pid).get();
       precioHastaLocal = parentDoc.data()?.precioHasta || null;
-      packPct = parentDoc.data()?.packPct ?? 85;
+      packPct = resolvePackPct(parentDoc.data());
     } catch (_) { precioHastaLocal = null; }
 
     let precio1 = 0, precio2 = 0;
@@ -126,7 +129,8 @@ export function createPriceCalendar({ db, serverTimestamp, escapeHtml }) {
     }
 
     const suma = precio1 + precio2;
-    const autoPrice = Math.round(suma * packPct / 100);
+    // Fórmula derivada vía el espejo canónico (packPct × (A + B)).
+    const autoPrice = packBasePrice(precio1, precio2, packPct) ?? Math.round(suma * packPct / 100);
 
     packState = { packId: pid, autoPrice, packPct, sourceProperties: sp };
     basePrice = autoPrice;
@@ -628,22 +632,34 @@ export function createPriceCalendar({ db, serverTimestamp, escapeHtml }) {
     if (peDate) peDate.textContent = iso;
 
     const current = priceMap.has(iso) ? priceMap.get(iso) : basePrice;
-    const modeLabel = priceMap.has(iso) ? "manual" : (packState ? "auto (85%)" : "base");
+    const modeLabel = priceMap.has(iso) ? "manual" : (packState ? `auto (${packState.packPct}%)` : "base");
     if (peCurrent) peCurrent.textContent = `${Number(current || 0).toFixed(0)}€ (${modeLabel})`;
+
+    // MODO PACK: SOLO-LECTURA. El precio del pack se DERIVA de las unidades (packPct × (A + B));
+    // aquí no se editan overrides del pack. Se oculta la edición y se explica al usuario.
+    const readOnlyPack = !!packState;
 
     if (peInput) {
       peInput.value = priceMap.has(iso) ? String(priceMap.get(iso)) : "";
       peInput.placeholder = packState ? `${packState.autoPrice}€ (auto)` : "";
+      peInput.readOnly = readOnlyPack;
+      peInput.disabled = readOnlyPack;
+      peInput.style.display = readOnlyPack ? "none" : "";
     }
+    if (peSave)  peSave.style.display  = readOnlyPack ? "none" : "";
+    if (peReset) peReset.style.display = readOnlyPack ? "none" : "";
 
-    if (peMsg) peMsg.textContent = busySet.has(iso)
-      ? "⚠️ Nota: este día está reservado. Puedes cambiar el precio igualmente, pero solo afectará a futuro."
-      : (packState
-          ? `Precio automático: ${packState.autoPrice}€. Introduce un precio manual para sobreescribirlo.`
+    if (peMsg) peMsg.textContent = readOnlyPack
+      ? `Precio automático ${packState.autoPrice}€ (${packState.packPct}% × precio de las dos unidades). `
+        + `El precio del pack no se edita aquí: ajusta el precio de cada apartamento o el % del pack. `
+        + `Si en una fecha falta el precio de alguna unidad, el pack NO es reservable esa noche.`
+      : (busySet.has(iso)
+          ? "⚠️ Nota: este día está reservado. Puedes cambiar el precio igualmente, pero solo afectará a futuro."
           : "Doble click en un día para editar. Click normal para seleccionar rango.");
   }
 
   async function saveOverride() {
+    if (packState) return; // pack: solo-lectura; el precio se deriva de las unidades, no se guardan overrides
     if ((!apartmentId && !packState) || !editorISO) return;
     const val = String(peInput?.value || "").trim();
 
@@ -689,6 +705,7 @@ export function createPriceCalendar({ db, serverTimestamp, escapeHtml }) {
   }
 
   async function resetToBase() {
+    if (packState) return; // pack: solo-lectura; nada que resetear (el precio se deriva de las unidades)
     if ((!apartmentId && !packState) || !editorISO) return;
     const ref = packState
       ? db.collection("packs").doc(packState.packId).collection("prices").doc(editorISO)
