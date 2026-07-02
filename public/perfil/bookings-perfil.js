@@ -305,6 +305,13 @@ function normalizeBookings(raw) {
   return bookings.map((b) => (b && typeof b === "object" ? b : {}));
 }
 
+// Doc-sombra que el webhook crea por cada unidad de un pack (id "<reservaId>__<unidad>", campo packId).
+// Existen para bloquear los calendarios de las unidades, pero NO deben mostrarse como reservas
+// propias en el perfil: el cliente ve solo el doc principal del pack. El principal no tiene ninguna marca.
+function isPackShadow(b) {
+  return !!b?.packId || String(b?.id || b?.reservaId || "").includes("__");
+}
+
 function sortBookingsByProximity(bookings) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -380,13 +387,13 @@ async function executeCancelBooking(b) {
   const reservaId = b.id || b.reservaId;
   if (!reservaId) throw new Error("ID de reserva desconocido");
 
-  const batch = db.batch();
-  batch.update(db.collection("reservas").doc(reservaId), {
+  // El front solo marca la reserva como cancelada. La liberación de fechas (borrar los
+  // reservas_public del pack Y de sus unidades, y marcar cancelled los docs-sombra) la hace
+  // el trigger onReservaCancelled en el servidor, que es la fuente de verdad.
+  await db.collection("reservas").doc(reservaId).update({
     status:      "cancelled",
     cancelledAt: serverTimestamp(),
   });
-  batch.delete(db.collection("reservas_public").doc(reservaId));
-  await batch.commit();
 }
 
 export function confirmCancelBooking(b) {
@@ -618,7 +625,12 @@ export async function loadBookingsHistory() {
     const raw = [];
     snap.forEach((doc) => raw.push({ id: doc.id, ...doc.data() }));
 
-    const normalized = normalizeBookings(raw);
+    // Ocultar los docs-sombra de pack: el cliente ve UNA sola tarjeta (el doc principal del pack).
+    // No se borran (siguen bloqueando calendarios); solo se excluyen de la presentación, lo que
+    // también elimina su botón "Cancelar", evitando una cancelación parcial de una unidad suelta.
+    const visible = raw.filter((b) => !isPackShadow(b));
+
+    const normalized = normalizeBookings(visible);
     const sorted = sortBookingsByProximity(normalized);
 
     state.bookingsHistoryCache = sorted;

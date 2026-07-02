@@ -173,7 +173,11 @@ function initUserReservationsListener(uid) {
     .orderBy("createdAt", "desc")
     .onSnapshot(
       (snapshot) => {
-        reservasCache = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        reservasCache = snapshot.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          // Ocultar docs-sombra de pack (id "<reservaId>__<unidad>" / campo packId): el cliente
+          // ve solo el doc principal del pack. No se borran; siguen bloqueando calendarios.
+          .filter((r) => !r.packId && !String(r.id || r.reservaId || "").includes("__"));
         reservasFiltered = [...reservasCache];
         applyReservasFilters();
       },

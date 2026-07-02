@@ -56,6 +56,13 @@ export function createDashboardUI({ db, escapeHtml, getPropertiesCache }) {
     return st === "cancelled" || st === "canceled" || r?.cancelled === true;
   }
 
+  // Doc-sombra que el webhook crea por cada unidad de un pack (id "<reservaId>__<unidad>", campo packId).
+  // Existen solo para bloquear los calendarios de las unidades; NO deben contarse como reservas
+  // independientes (evita el triple conteo pack + unidad A + unidad B). El pack se cuenta 1 vez vía su doc principal.
+  function isPackShadow(r) {
+    return !!r?.packId || String(r?.reservaId || r?.id || "").includes("__");
+  }
+
   function setCounters({ reservas, llegadas, salidas, comentarios, cancelaciones }) {
     if (dashReservas) dashReservas.textContent = String(reservas || 0);
     if (dashLlegadas) dashLlegadas.textContent = String(llegadas || 0);
@@ -108,6 +115,7 @@ export function createDashboardUI({ db, escapeHtml, getPropertiesCache }) {
 
     for (const r of reservasCache) {
       if (isCancelled(r)) continue;
+      if (isPackShadow(r)) continue;
 
       const propId = String(r.propertyId || "");
       if (!propId) continue;
@@ -208,7 +216,7 @@ export function createDashboardUI({ db, escapeHtml, getPropertiesCache }) {
   function findNextReserva() {
     const start = getTodayStart();
     const upcoming = reservasCache
-      .filter((r) => !isCancelled(r))
+      .filter((r) => !isCancelled(r) && !isPackShadow(r))
       .map((r) => ({ r, d: parseEsDate(r.checkIn) }))
       .filter((x) => x.d && x.d >= start)
       .sort((a, b) => a.d - b.d);

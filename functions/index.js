@@ -9,6 +9,10 @@ const admin                 = require("firebase-admin");
 admin.initializeApp();
 const db = admin.firestore();
 
+// ⚠️ DINERO: el secreto STRIPE_SECRET_KEY debe apuntar a la clave de TEST (sk_test_...) mientras
+// se prueba. AL PASAR A PRODUCCIÓN hay que cambiarlo a la clave LIVE (sk_live_...) con:
+//   firebase functions:secrets:set STRIPE_SECRET_KEY   (y re-desplegar functions)
+// Comprobar antes de lanzar: firebase functions:secrets:access STRIPE_SECRET_KEY
 const STRIPE_SECRET_KEY     = defineSecret("STRIPE_SECRET_KEY");
 const STRIPE_WEBHOOK_SECRET = defineSecret("STRIPE_WEBHOOK_SECRET");
 const EMAIL_USER            = defineSecret("EMAIL_USER");
@@ -18,8 +22,12 @@ const OWNER_EMAIL = "hugocalvogarcia123@gmail.com";
 // PRODUCCIÓN: cambiar al dominio real de la intranet (ej: "https://admin.jlaapartments.com")
 const INTRANET_URL = "https://admin.tucasaenjerez.com";
 
-// PRODUCCIÓN: actualizar con los dominios reales antes del lanzamiento
+// PRODUCCIÓN: orígenes permitidos para CORS.
+// El front se sirve actualmente desde Firebase Hosting (tucasaenjerez-app.web.app /
+// .firebaseapp.com); los dominios de marca se mantienen para cuando apunten al mismo sitio.
 const ALLOWED_ORIGINS = [
+  "https://tucasaenjerez-app.web.app",
+  "https://tucasaenjerez-app.firebaseapp.com",
   "https://tucasaenjerez.com",
   "https://www.tucasaenjerez.com",
   "https://app.tucasaenjerez.com",
@@ -230,6 +238,22 @@ exports.stripeWebhook = onRequest(
       const p = pendingSnap.data();
       if (p.status === "confirmed") { res.status(200).send("OK"); return; }
 
+      // payment_intent: imprescindible para poder reembolsar al cancelar. En el evento
+      // checkout.session.completed suele venir como string; si faltara, lo recuperamos con la API.
+      let paymentIntentId = typeof session.payment_intent === "string"
+        ? session.payment_intent
+        : (session.payment_intent?.id || null);
+      if (!paymentIntentId) {
+        try {
+          const fullSession = await stripe.checkout.sessions.retrieve(session.id);
+          paymentIntentId = typeof fullSession.payment_intent === "string"
+            ? fullSession.payment_intent
+            : (fullSession.payment_intent?.id || null);
+        } catch (e) {
+          console.error(`No se pudo recuperar payment_intent de la sesión ${session.id}:`, e.message);
+        }
+      }
+
       const batch = db.batch();
 
       batch.set(db.collection("reservas").doc(reservaId), {
@@ -252,7 +276,12 @@ exports.stripeWebhook = onRequest(
         pointsEarned:    p.pointsEarned,
         guests:          p.guests,
         guestsForExport: p.guestsForExport,
-        stripeSessionId: session.id,
+        // Persistimos el tipo y las unidades del pack en el doc PRINCIPAL para que
+        // onReservaCancelled sepa qué reservas_public sombra liberar al cancelar.
+        propertyTipo:     p.propertyTipo || "apto",
+        sourceProperties: Array.isArray(p.sourceProperties) ? p.sourceProperties : [],
+        stripeSessionId:     session.id,
+        stripePaymentIntent: paymentIntentId,
         paymentStatus:   "paid",
         createdAt:       admin.firestore.FieldValue.serverTimestamp(),
       });
@@ -472,28 +501,84 @@ exports.onChatMessageCreated = onDocumentCreated(
 exports.onReservaCancelled = onDocumentUpdated(
   {
     document: "reservas/{reservaId}",
-    secrets:  [EMAIL_USER, EMAIL_PASS],
+    secrets:  [EMAIL_USER, EMAIL_PASS, STRIPE_SECRET_KEY],
   },
   async (event) => {
+    const reservaId = event.params.reservaId;
+
+    // Los docs-sombra de unidades de un pack tienen id "<reservaId>__<unidad>".
+    // Se gestionan desde la cancelación del doc PRINCIPAL; si el evento viene de un sombra
+    // (lo marcamos cancelled más abajo) salimos para no re-entrar ni reenviar emails.
+    if (reservaId.includes("__")) return;
+
     const before = event.data.before.data();
     const after  = event.data.after.data();
 
     if (before.status === "cancelled" || after.status !== "cancelled") return;
 
-    const reservaId   = event.params.reservaId;
     const sourceProps = Array.isArray(after.sourceProperties) ? after.sourceProperties : [];
 
-    // Delete shadow docs created for pack reservations
-    if (sourceProps.length) {
-      await Promise.all(
-        sourceProps.flatMap((pid) => {
-          const shadowId = `${reservaId}__${pid}`;
-          return [
-            db.collection("reservas_public").doc(shadowId).delete(),
-            db.collection("reservas").doc(shadowId).delete(),
-          ];
-        })
+    // Liberación de fechas (fuente de verdad = este trigger; el front solo marca cancelled).
+    // Siempre se borra el doc público de la propia reserva (pack o alojamiento normal) y,
+    // para packs, también el sombra de cada unidad + se marca cancelled su doc-sombra.
+    const batch = db.batch();
+    batch.delete(db.collection("reservas_public").doc(reservaId));
+    sourceProps.forEach((pid) => {
+      const shadowId = `${reservaId}__${pid}`;
+      batch.delete(db.collection("reservas_public").doc(shadowId));
+      batch.set(
+        db.collection("reservas").doc(shadowId),
+        {
+          status:      "cancelled",
+          cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
       );
+    });
+    await batch.commit();
+
+    // ─── Refund en Stripe (solo doc PRINCIPAL; los sombra ya salen por la guarda "__") ───
+    // Para un PACK el cobro fue único, así que se hace UN solo refund del pago (no uno por unidad).
+    const reservaRef      = db.collection("reservas").doc(reservaId);
+    const paymentIntentId = after.stripePaymentIntent || null;
+
+    if (after.refundId) {
+      // Idempotencia: ya reembolsada, no repetir.
+      console.log(`↩️  Reserva ${reservaId} ya tiene refund ${after.refundId} (${after.refundStatus || "?"}); se omite.`);
+    } else if (!paymentIntentId) {
+      // Reserva antigua anterior a guardar payment_intent: no rompemos, solo avisamos.
+      console.warn(`⚠️  Reserva ${reservaId} sin stripePaymentIntent (reserva antigua); se omite el refund. Reembolsar manualmente si procede.`);
+      await reservaRef.set({ refundStatus: "skipped_no_payment_intent" }, { merge: true }).catch(() => {});
+    } else {
+      try {
+        const stripe = require("stripe")(STRIPE_SECRET_KEY.value());
+
+        // DINERO: reembolsar solo si el pago está realmente cobrado. Si el PaymentIntent no está
+        // "succeeded" (p.ej. requires_payment_method, processing, canceled), NO llamamos a refunds.create.
+        const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+        if (pi.status !== "succeeded") {
+          console.warn(`⚠️  PaymentIntent ${paymentIntentId} en estado "${pi.status}" (no succeeded); no se reembolsa la reserva ${reservaId}.`);
+          await reservaRef.set({ refundStatus: `skipped_pi_${pi.status}` }, { merge: true }).catch(() => {});
+        } else {
+          const refund = await stripe.refunds.create(
+            { payment_intent: paymentIntentId },
+            { idempotencyKey: `refund_${reservaId}` }   // evita doble reembolso ante reintentos
+          );
+          await reservaRef.set({
+            refundId:     refund.id,
+            refundStatus: refund.status || "pending",
+            refundedAt:   admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+          console.log(`💸 Refund creado para ${reservaId}: ${refund.id} (${refund.status})`);
+        }
+      } catch (err) {
+        // No tragamos el error: se registra y se marca la reserva para verlo en la intranet.
+        console.error(`❌ Error creando refund para ${reservaId}:`, err.message);
+        await reservaRef.set({
+          refundStatus: "failed",
+          refundError:  String(err.message || err),
+        }, { merge: true }).catch(() => {});
+      }
     }
 
     const propertyName = after.propertyName || after.propertyId || "Alojamiento";

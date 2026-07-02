@@ -32,6 +32,19 @@ export function createGananciasUI({ db, escapeHtml, getPropertiesCache, resolveR
     return nightsBetween(start, end);
   }
 
+  function isCancelled(r) {
+    const s = String(r?.status || r?.estado || "").toLowerCase();
+    return s === "cancelled" || s === "canceled" || s === "cancelada" || r?.cancelled === true;
+  }
+
+  // Doc-sombra que el webhook crea por cada unidad de un pack:
+  // id = "<reservaId>__<unidad>" y lleva el campo packId. El doc principal del pack NO tiene ninguno.
+  // Estos sombra existen para bloquear los calendarios de las unidades y NO deben contarse como
+  // ingreso independiente (duplican el totalPrice del pack).
+  function isPackShadow(r) {
+    return !!r?.packId || String(r?.id || r?.reservaId || "").includes("__");
+  }
+
   function render() {
     root.innerHTML = `
       <div class="card">
@@ -181,6 +194,7 @@ export function createGananciasUI({ db, escapeHtml, getPropertiesCache, resolveR
     let soldNights = 0;
 
     const reservas = reservasAll.filter(r => {
+      if (isCancelled(r)) return false;
       const pid = resolveReservasId?.(r.propertyId) || r.propertyId;
       if (!pid) return false;
       if (propertyFilter && pid !== propertyFilter) return false;
@@ -190,11 +204,18 @@ export function createGananciasUI({ db, escapeHtml, getPropertiesCache, resolveR
 
     reservas.forEach(r => {
       const pid = resolveReservasId?.(r.propertyId) || r.propertyId;
-      if (!occ.has(pid)) return;
+
+      // Ocupación por unidad: los docs-sombra del pack marcan A y B como ocupadas (correcto).
+      if (occ.has(pid)) {
+        const overlap = overlapNights(r.checkInISO, r.checkOutISO, range.startISO, range.endISO);
+        overlap.forEach(n => occ.get(pid).add(n));
+      }
+
+      // Ingresos / noches vendidas: NO sumar los docs-sombra del pack (duplican el precio).
+      // El ingreso vive en el doc principal del pack, que además pasa a "cancelled" al cancelar.
+      if (isPackShadow(r)) return;
 
       const overlap = overlapNights(r.checkInISO, r.checkOutISO, range.startISO, range.endISO);
-      overlap.forEach(n => occ.get(pid).add(n));
-
       const nightsTotal = Number(r.nights || 0) || (nightsBetween(r.checkInISO, r.checkOutISO).length);
       const perNight = nightsTotal > 0 ? (Number(r.totalPrice || 0) / nightsTotal) : 0;
 
