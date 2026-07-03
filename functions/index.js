@@ -581,6 +581,33 @@ exports.onReservaCancelled = onDocumentUpdated(
       }
     }
 
+    // ─── Reversión de puntos de fidelidad ───────────────────────────────────────────────
+    // Los puntos se ganaron al pagar (webhook, increment(+pointsEarned)); al cancelar hay que
+    // restarlos o se podría farmear puntos con reservar→cancelar (el refund deja el dinero neutro
+    // pero los puntos se quedarían, e inflarían el nivel → % de descuento futuro).
+    // Idempotente con flag pointsReversed (mismo patrón que refundId). increment(-pts) sin clamp:
+    // en el flujo real no queda negativo; si un ajuste manual lo provocara, preferimos que un
+    // saldo negativo delate la inconsistencia antes que taparla.
+    const pts = Number(after.pointsEarned) || 0;
+    if (after.pointsReversed) {
+      console.log(`↩️  Puntos ya revertidos para ${reservaId}; se omite.`);
+    } else if (pts > 0 && after.userId) {
+      try {
+        await db.collection("usuarios").doc(after.userId).set(
+          { points: admin.firestore.FieldValue.increment(-pts) },
+          { merge: true }
+        );
+        await reservaRef.set({
+          pointsReversed:   true,
+          pointsReversedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+        console.log(`⭐ Revertidos ${pts} puntos a ${after.userId} por cancelación de ${reservaId}`);
+      } catch (err) {
+        console.error(`❌ Error revirtiendo puntos de ${reservaId}:`, err.message);
+        await reservaRef.set({ pointsReversalStatus: "failed" }, { merge: true }).catch(() => {});
+      }
+    }
+
     const propertyName = after.propertyName || after.propertyId || "Alojamiento";
     const guestName    = after.name  || after.email || "Huésped";
 

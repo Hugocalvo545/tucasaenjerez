@@ -139,10 +139,13 @@ export function renderCalendar() {
 
     const isAdminBlocked = state.adminBlockedSet?.has?.(iso) === true;
 
+    // Una noche ocupada (reservedDatesSet, incluidos los sombra de pack) bloquea SIEMPRE, sin
+    // excepción de "check-in ajeno": así el pintado/selección coinciden con rangeIsBookable
+    // (la validación de fondo) y no se puede seleccionar/reservar una fecha ya ocupada.
     const isBlockedForBooking =
       isUnpriced ||
       isFullyBlocked ||
-      (isReserved && !hasCheckIn) ||
+      isReserved ||
       isHold ||
       isAdminBlocked;
 
@@ -152,7 +155,7 @@ export function renderCalendar() {
     else if (isCheckOut) classes += ' checkout';
     else if (isInRange) classes += ' range';
     else if (isUnpriced) classes += ' unpriced';
-    else if (isFullyBlocked || (isReserved && !hasCheckIn) || isAdminBlocked) classes += ' occupied';
+    else if (isFullyBlocked || isReserved || isAdminBlocked) classes += ' occupied';
     else if (isHold) classes += ' hold';
     else {
       classes += ' available';
@@ -367,7 +370,7 @@ export function selectCalendarDate(year, month, day) {
   const blocked =
     clicked < today ||
     state.holdDatesSet.has(iso) ||
-    (state.reservedDatesSet.has(iso) && !state.checkInDatesSet.has(iso)) ||
+    state.reservedDatesSet.has(iso) ||
     (state.checkInDatesSet.has(iso) && state.checkOutDatesSet.has(iso));
 
   if (blocked) return;
@@ -412,8 +415,6 @@ export function selectCalendarDate(year, month, day) {
   const days = daysBetweenExclusiveEnd(currentCI, clicked);
 
   const hasBlockedInside = days.some(d => {
-    // permitir que el rango empiece en un día que sea check-in ajeno
-    if (d === ciISO && state.checkInDatesSet.has(ciISO)) return false;
     return state.holdDatesSet.has(d) || state.reservedDatesSet.has(d);
   });
 
