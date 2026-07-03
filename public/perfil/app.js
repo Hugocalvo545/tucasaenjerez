@@ -2,6 +2,7 @@
 import { auth, db } from "../shared/firebase.js";
 import { state } from "../shared/state.js";
 import { initPlacesProfile, setupAddressAutocomplete } from "../shared/places.js";
+import { populateCountrySelect } from "../shared/countries.js";
 
 // Auth (login / tabs / pasos)
 import { initAuth, switchTab, regNextStep, regPrevStep } from "./auth.js";
@@ -148,8 +149,23 @@ async function deleteHoldFromSessionStorage() {
   try { sessionStorage.removeItem('activeHoldId'); } catch (_) {}
 }
 
+// Rellena los selects de País y Nacionalidad del registro con la lista completa
+// de países (ISO 3166-1) desde el array reutilizable compartido.
+function populateRegistroCountrySelects() {
+  populateCountrySelect(document.getElementById("nationality"));
+  populateCountrySelect(document.getElementById("country"));
+}
+
 // DOM ready
 document.addEventListener("DOMContentLoaded", async () => {
+  populateRegistroCountrySelects();
+
+  // Deep-link "Regístrate" (…/index-usuario.html#register): abrir la vista de
+  // CREAR CUENTA (paso 1) en vez de quedarse en la pestaña de login.
+  if (window.location.hash === "#register") {
+    switchTab("register");
+  }
+
   initAuth(async () => {
     await loadUserData();
     showProfileScreenFromProfile();

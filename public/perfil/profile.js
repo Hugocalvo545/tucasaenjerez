@@ -1,6 +1,7 @@
 import { auth, db } from "../shared/firebase.js";
 import { state } from "../shared/state.js";
 import { LEVELS, calculateLevel } from "../shared/config.js";
+import { populateCountrySelect } from "../shared/countries.js";
 
 export { calculateLevel };
 
@@ -105,8 +106,11 @@ export function openProfileEdit() {
   setVal("ep_birthDate",   u.birthDate || "");
   setVal("ep_docType",     u.docType || "DNI");
   setVal("ep_docNumber",   u.docNumber);
-  setVal("ep_nationality", u.nationality || "Española");
-  setVal("ep_country",     u.country || "España");
+  // País y Nacionalidad: lista completa (ISO 3166-1) desde el array compartido.
+  // Si el valor guardado no está en el catálogo (dato antiguo tipo "Española"),
+  // populateCountrySelect lo conserva como opción seleccionada.
+  populateCountrySelect(el("ep_nationality"), { selected: u.nationality || "" });
+  populateCountrySelect(el("ep_country"),     { selected: u.country || "" });
   setVal("ep_address",     u.address);
   setVal("ep_city",        u.city);
   setVal("ep_zipcode",     u.zipcode);
