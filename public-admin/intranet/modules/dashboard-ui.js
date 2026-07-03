@@ -186,16 +186,16 @@ export function createDashboardUI({ db, escapeHtml, getPropertiesCache }) {
 
         return `
           <tr class="dash-prop-row" data-prop-id="${escapeHtml(p.id)}">
-            <td>${escapeHtml(p.id)}</td>
-            <td>
+            <td data-label="ID">${escapeHtml(p.id)}</td>
+            <td data-label="Alojamiento" class="td-title">
               <div style="font-weight:700">${escapeHtml(p.nombre)}</div>
               ${p.ciudad ? `<div class="muted" style="font-size:0.85rem">${escapeHtml(p.ciudad)}</div>` : ""}
             </td>
-            <td>${estado}</td>
-            <td>${p.llegadas}</td>
-            <td>${p.salidas}</td>
-            <td>${unread}</td>
-            <td>0</td>
+            <td data-label="Estado">${estado}</td>
+            <td data-label="Llegadas">${p.llegadas}</td>
+            <td data-label="Salidas">${p.salidas}</td>
+            <td data-label="Mensajes clientes">${unread}</td>
+            <td data-label="Booking">0</td>
           </tr>
         `;
       })

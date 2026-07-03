@@ -112,6 +112,30 @@ export function sanitizeForFirestore(value) {
   return value;
 }
 
+// ── Fotos del alojamiento ────────────────────────────────────────────────
+// Placeholder visual cuando no hay ninguna foto (mismo asset que usa el listado).
+// Ruta relativa al documento HTML; todas las páginas que lo usan viven en /multi/.
+export const PLACEHOLDER_IMG = "../img/placeholder-alojamiento.svg";
+
+// Lee el array de fotos EXACTAMENTE como el listado (app-multi.js): prioriza
+// `images[]` y sólo cae a `fotos[]` (legacy) cuando images está vacío/ausente.
+// La intranet guarda las fotos en `images` y deja `fotos: []`, así que comprobar
+// `fotos` primero devolvía siempre un array vacío (causa de la miniatura rota).
+export function propertyImages(data) {
+  const src = data || {};
+  const images = Array.isArray(src.images) && src.images.length
+    ? src.images
+    : (Array.isArray(src.fotos) ? src.fotos : []);
+  return images.filter(Boolean);
+}
+
+// Foto de portada: imageMain si existe, si no la primera del array. '' si no hay.
+export function propertyCover(data) {
+  const main = String(data?.imageMain || "").trim();
+  if (main) return main;
+  return propertyImages(data)[0] || "";
+}
+
 export function normalizeHumanName(s = "") {
   return String(s).trim().replace(/\s+/g, " ");
 }

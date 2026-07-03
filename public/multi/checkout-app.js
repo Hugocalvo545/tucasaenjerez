@@ -2,6 +2,7 @@ import { db, auth } from '../shared/firebase.js';
 import { state } from '../shared/state.js';
 import { PRICE_PER_NIGHT, calculateLevel } from '../shared/config.js';
 import { packBasePrice, resolvePackPct } from '../shared/pack-pricing.js';
+import { propertyCover } from '../shared/utils.js';
 
 import {
   renderCalendar,
@@ -187,11 +188,9 @@ async function setupPropertyContextFromUrl() {
 
     if (snap.exists) {
       const data = snap.data() || {};
-      const fotos = Array.isArray(data.fotos)
-        ? data.fotos
-        : (Array.isArray(data.images) ? data.images : []);
 
-      state.currentPropertyImg = fotos[0] || '';
+      // Misma lectura que el listado: prioriza images[], cae a fotos[] (legacy).
+      state.currentPropertyImg = propertyCover(data);
       state.currentPropertyCity = data.ciudad || '';
       state.currentPropertyCap = data.capacidad || '';
 
@@ -219,6 +218,12 @@ async function setupPropertyContextFromUrl() {
             Number(aptB.data()?.precioBase),
             pct
           );
+
+          // Si el pack no trae foto propia, usa la de su primera unidad (la que haya).
+          if (!state.currentPropertyImg) {
+            state.currentPropertyImg =
+              propertyCover(aptA.data()) || propertyCover(aptB.data());
+          }
         }
         state.currentPricePerNight = derived != null ? derived : PRICE_PER_NIGHT;
       } else {

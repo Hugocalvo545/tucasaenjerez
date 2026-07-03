@@ -2091,25 +2091,221 @@ align-items: end;
   }
 }
 
-/* ===== CALENDARIO: celdas más compactas en móvil ===== */
+/* ===== ALOJAMIENTOS / PACKS / DASHBOARD: tabla → tarjetas en móvil =====
+   Mismas tablas de muchas columnas que se desbordaban en móvil. Cada fila
+   pasa a ser una tarjeta apilada ("Etiqueta: valor"), con el botón de acción
+   (Editar) siempre visible dentro de la tarjeta. En escritorio no cambia nada
+   (todo vive dentro de este @media). */
 @media (max-width: 700px) {
+  .intranet #tab-alojamientos .table thead,
+  .intranet #tab-packs .table thead,
+  .intranet .dash-table-wrap .table thead {
+    display: none;
+  }
+
+  /* Cada fila de datos = una tarjeta (excluye las filas del editor inline) */
+  .intranet #tab-alojamientos .table tbody tr:not(.edit-inline-row),
+  .intranet #tab-packs .table tbody tr:not(.edit-inline-row),
+  .intranet .dash-table-wrap .table tbody tr {
+    display: block;
+    margin-bottom: 12px;
+    border: 1px solid rgba(0,0,0,.10);
+    border-radius: 10px;
+    padding: 12px;
+    background: #fff;
+  }
+
+  /* Cada celda = fila "Etiqueta: valor". El !important anula los
+     ocultamientos por columna (nth-child) de los @media más estrechos. */
+  .intranet #tab-alojamientos .table tbody tr:not(.edit-inline-row) > td,
+  .intranet #tab-packs .table tbody tr:not(.edit-inline-row) > td,
+  .intranet .dash-table-wrap .table tbody tr > td {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0 !important;
+    border: none !important;
+    text-align: right !important;
+    font-size: 13px;
+    width: auto !important;
+    white-space: normal !important;
+  }
+
+  .intranet #tab-alojamientos .table tbody tr:not(.edit-inline-row) > td::before,
+  .intranet #tab-packs .table tbody tr:not(.edit-inline-row) > td::before,
+  .intranet .dash-table-wrap .table tbody tr > td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #667085;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    text-align: left;
+    flex-shrink: 0;
+    min-width: 84px;
+  }
+
+  /* Celda título (Nombre / Alojamiento) = cabecera de la tarjeta.
+     Se replica `tr:not(.edit-inline-row) > td` para superar en especificidad
+     a la regla general de td y ganar el display:block. */
+  .intranet #tab-alojamientos .table tbody tr:not(.edit-inline-row) > td.td-title,
+  .intranet #tab-packs .table tbody tr:not(.edit-inline-row) > td.td-title,
+  .intranet .dash-table-wrap .table tbody tr > td.td-title {
+    display: block !important;
+    text-align: left !important;
+    font-weight: 700;
+    font-size: 15px;
+    padding-bottom: 8px !important;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(0,0,0,.06) !important;
+  }
+  .intranet #tab-alojamientos .table tbody tr:not(.edit-inline-row) > td.td-title::before,
+  .intranet #tab-packs .table tbody tr:not(.edit-inline-row) > td.td-title::before,
+  .intranet .dash-table-wrap .table tbody tr > td.td-title::before {
+    display: none;
+  }
+
+  /* Celda de acciones (Editar…): siempre visible, área táctil ≥44px */
+  .intranet #tab-alojamientos .table tbody tr:not(.edit-inline-row) > td.td-actions,
+  .intranet #tab-packs .table tbody tr:not(.edit-inline-row) > td.td-actions {
+    display: block !important;
+    text-align: left !important;
+    padding-top: 10px !important;
+    margin-top: 6px;
+    border-top: 1px solid rgba(0,0,0,.06) !important;
+  }
+  .intranet #tab-alojamientos .table tbody tr:not(.edit-inline-row) > td.td-actions::before,
+  .intranet #tab-packs .table tbody tr:not(.edit-inline-row) > td.td-actions::before {
+    display: none;
+  }
+  /* Anula el display:none del botón Editar que aplican los @media anchos */
+  .intranet #tab-alojamientos .table tbody tr:not(.edit-inline-row) > td.td-actions .btn-secondary,
+  .intranet #tab-packs .table tbody tr:not(.edit-inline-row) > td.td-actions .btn-secondary {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    font-size: 15px;
+  }
+
+  /* Estado vacío / mensajes con colspan: bloque centrado sin etiqueta */
+  .intranet #tab-alojamientos .table tbody tr:not(.edit-inline-row) > td[colspan],
+  .intranet #tab-packs .table tbody tr:not(.edit-inline-row) > td[colspan],
+  .intranet .dash-table-wrap .table tbody tr > td[colspan] {
+    display: block !important;
+    text-align: center !important;
+  }
+  .intranet #tab-alojamientos .table tbody tr:not(.edit-inline-row) > td[colspan]::before,
+  .intranet #tab-packs .table tbody tr:not(.edit-inline-row) > td[colspan]::before,
+  .intranet .dash-table-wrap .table tbody tr > td[colspan]::before {
+    display: none;
+  }
+}
+
+/* ===== ALOJAMIENTOS/PACKS · móvil: editor inline fiable + campos sin desborde =====
+   Correcciones tras el rediseño tabla→tarjeta:
+   - PROBLEMA 1 (Editar no abría en alojamientos): la fila del editor inline
+     (<tr class="edit-inline-row"> que inserta showInlineEditor) quedaba como
+     table-row suelta entre tarjetas display:block. Un table-row entre hermanos
+     block colapsa de forma intermitente (altura 0 según ancho/posición), así
+     que el editor se insertaba invisible y parecía que "Editar" no hacía nada.
+     El handler del botón nunca se rompió; el problema era puramente de layout.
+     Se fuerza la fila (y su celda) a bloque para que renderice siempre.
+   - PROBLEMA 2 (campos desbordados): los inputs heredan width:100% pero SIN
+     box-sizing:border-box (regla base), así que padding+borde los sacaban de su
+     tarjeta. Se añade border-box y tope de ancho. Todo solo en móvil (≤700px);
+     escritorio intacto. */
+@media (max-width: 700px) {
+  /* 1) Editor inline como bloque fiable (no table-row colapsable) */
+  .intranet #tab-alojamientos .table tbody tr.edit-inline-row,
+  .intranet #tab-packs .table tbody tr.edit-inline-row {
+    display: block !important;
+    width: 100% !important;
+  }
+  .intranet #tab-alojamientos .table tbody tr.edit-inline-row > td,
+  .intranet #tab-packs .table tbody tr.edit-inline-row > td {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* 2) La lista ya son tarjetas: el overflow-x heredado de la tabla ancha
+        antigua ensanchaba el contenido del editor/formulario. Ya no hace falta. */
+  .intranet #tab-alojamientos .split > .panel:first-child {
+    overflow-x: visible !important;
+  }
+
+  /* 3) Ningún control de formulario se sale de su tarjeta (incluye el
+        formulario completo: Servicios, Lat/Lng, Check-in/out, etc.). */
+  .intranet #tab-alojamientos input:not([type="checkbox"]):not([type="radio"]),
+  .intranet #tab-alojamientos select,
+  .intranet #tab-alojamientos textarea,
+  .intranet #tab-packs input:not([type="checkbox"]):not([type="radio"]),
+  .intranet #tab-packs select,
+  .intranet #tab-packs textarea {
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+  }
+
+  /* 4) Editor inline: etiqueta encima y campo a lo ancho (sin flujo inline). */
+  .intranet .edit-inline .row { display: block !important; }
+  .intranet .edit-inline .row label { display: block !important; }
+  .intranet .edit-inline input:not([type="checkbox"]):not([type="radio"]),
+  .intranet .edit-inline select,
+  .intranet .edit-inline textarea {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 5) Botones del editor inline ("Editar todo", "Cerrar") SIEMPRE visibles.
+     El @media (max-width:1100px) oculta `#tab-alojamientos .table td:last-child
+     .btn-secondary` (era para el botón "Editar" de la columna de acciones de la
+     tabla), pero la celda colspan del editor inline TAMBIÉN es td:last-child, así
+     que ocultaba "Editar todo"/"Cerrar" en móvil. Aquí los re-mostramos. */
+  .intranet .edit-inline .btn-primary,
+  .intranet .edit-inline .btn-secondary {
+    display: inline-flex !important;
+  }
+}
+
+/* ===== CALENDARIO: celdas legibles y táctiles en móvil =====
+   Antes las celdas quedaban ~33px de ancho con el precio a 9px (ilegible en
+   el móvil del propietario). En móvil el calendario ocupa todo el ancho
+   disponible (full-bleed sobre el padding de las cards anidadas) y sube la
+   fuente del día/precio a un tamaño legible. Escritorio (≥768px) intacto. */
+@media (max-width: 700px) {
+  /* Full-bleed: recupera el ancho que consume el padding de las cards
+     anidadas (main + card de sección + card del calendario) para que las 7
+     columnas quepan con celdas ≥40px. Aplica a los 3 calendarios:
+     Alojamientos/Packs (.intranet-cal-wrap) y Precios (.price-cal-wrap). */
+  .intranet .intranet-cal-wrap,
+  .intranet .price-cal-wrap {
+    margin-left: -10px !important;
+    margin-right: -10px !important;
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+  }
+
   .intranet .calendar-day {
-    min-height: 48px !important;
+    min-height: 44px !important;
     padding: 4px 2px !important;
-    border-radius: 6px !important;
+    border-radius: 8px !important;
     aspect-ratio: auto !important;
   }
 
-  .intranet .cal-daynum { font-size: 11px !important; }
-  .intranet .cal-price  { font-size: 9px !important; padding: 1px 4px !important; }
+  .intranet .cal-daynum { font-size: 14px !important; }
+  .intranet .cal-price  { font-size: 12px !important; padding: 1px 4px !important; }
 
   .intranet .day-header,
   .intranet .cal-dow {
-    font-size: 10px !important;
-    padding: 4px 0 1px !important;
+    font-size: 12px !important;
+    padding: 4px 0 2px !important;
   }
 
-  .intranet .calendar-grid { gap: 3px !important; }
+  .intranet .calendar-grid { gap: 2px !important; }
 
   /* Leyenda del calendario: 2 columnas */
   .intranet .calendar-legend {

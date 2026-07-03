@@ -715,6 +715,33 @@ export function createPropertiesUI({
     }, { signal: events.signal });
   }
 
+  // Carga los calendarios reales del apartamento: ocupación (reservas) y precios
+  // por noche de /apartamentos/{id}/prices. Es la misma lógica que usa packs vía
+  // fillFormWithPack→ensureCalendarForPack. Se reutiliza desde fillFormWithProperty
+  // (Editar todo / escritorio) y desde showInlineEditor (Editar directo en móvil),
+  // para que el calendario aparezca con datos reales en un solo clic.
+  // NOTA (salvaguarda): estos calendarios NO escriben precios; calendar-admin.js
+  // solo crea/borra bloqueos. No hay vía para sobrescribir /prices con 0€ aquí.
+  async function loadCalendarsForProperty(prop) {
+    if (!prop?.id) return;
+    const apartmentId = prop.id;
+    const reservasId = resolveReservasId?.(apartmentId) || apartmentId;
+
+    await calendarAdmin?.ensureCalendarForProperty?.({
+      apartmentId,
+      reservasPropertyId: reservasId,
+      basePrice: Number(prop.precioBase || 0),
+      propertyName: prop.nombre || apartmentId,
+    });
+
+    await priceCalendar?.ensureCalendarForProperty?.({
+      apartmentId,
+      reservasPropertyId: reservasId,
+      basePrice: Number(prop.precioBase || 0),
+      propertyName: prop.nombre || apartmentId,
+    });
+  }
+
   async function fillFormWithProperty(prop) {
     if (!prop?.id) return;
 
@@ -758,22 +785,7 @@ export function createPropertiesUI({
 
     renderPhotos();
 
-    const apartmentId = prop.id;
-    const reservasId = resolveReservasId?.(apartmentId) || apartmentId;
-
-    await calendarAdmin?.ensureCalendarForProperty?.({
-      apartmentId,
-      reservasPropertyId: reservasId,
-      basePrice: Number(prop.precioBase || 0),
-      propertyName: prop.nombre || apartmentId,
-    });
-
-    await priceCalendar?.ensureCalendarForProperty?.({
-      apartmentId,
-      reservasPropertyId: reservasId,
-      basePrice: Number(prop.precioBase || 0),
-      propertyName: prop.nombre || apartmentId,
-    });
+    await loadCalendarsForProperty(prop);
 
     baseQuickSnapshot = quickSnapshot();
     basePhotoSnapshot = photoSnapshot();
@@ -878,6 +890,12 @@ export function createPropertiesUI({
     row.appendChild(cell);
     clickedTr.insertAdjacentElement('afterend', row);
     setTimeout(() => div.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+
+    // UX directa (mejor que packs): al pulsar "Editar" el calendario carga YA con
+    // los datos reales de ESTE apartamento, sin pasar por "Editar todo".
+    loadCalendarsForProperty(prop).catch((e) =>
+      console.error("Error cargando el calendario del apartamento:", e)
+    );
   }
 
   function renderPropertiesTable() {
@@ -893,13 +911,13 @@ export function createPropertiesUI({
       const isSel = selectedProp?.id && p.id === selectedProp.id;
       return `
         <tr data-row-id="${escapeHtml(p.id)}" class="${isSel ? "is-selected" : ""}">
-          <td>${escapeHtml(p.orden ?? "")}</td>
-          <td>${escapeHtml(p.nombre ?? "")}</td>
-          <td>${escapeHtml(p.ciudad ?? "")}</td>
-          <td>${escapeHtml(p.capacidad ?? "")}</td>
-          <td>${escapeHtml(precio)}</td>
-          <td>${p.activa ? "Sí" : "No"}</td>
-          <td><button class="btn-secondary" data-edit-id="${escapeHtml(p.id)}">Editar</button></td>
+          <td data-label="Orden">${escapeHtml(p.orden ?? "")}</td>
+          <td data-label="Nombre" class="td-title">${escapeHtml(p.nombre ?? "")}</td>
+          <td data-label="Ciudad">${escapeHtml(p.ciudad ?? "")}</td>
+          <td data-label="Capacidad">${escapeHtml(p.capacidad ?? "")}</td>
+          <td data-label="Precio base">${escapeHtml(precio)}</td>
+          <td data-label="Activo">${p.activa ? "Sí" : "No"}</td>
+          <td data-label="" class="td-actions"><button class="btn-secondary" data-edit-id="${escapeHtml(p.id)}">Editar</button></td>
         </tr>
       `;
     }).join("");

@@ -1,7 +1,7 @@
 import { db, auth } from '../shared/firebase.js';
 import { state } from '../shared/state.js';
 import { PRICE_PER_NIGHT, firebaseConfig } from '../shared/config.js';
-import { nightsBetween, sanitizeForFirestore } from '../shared/utils.js';
+import { nightsBetween, sanitizeForFirestore, PLACEHOLDER_IMG } from '../shared/utils.js';
 import { deleteActiveHold, renderCalendar, updateReservationDates } from './calendar.js';
 import { updateGuestForms, getAllGuestData, validateGuestsRequired } from './guests.js';
 
@@ -259,7 +259,9 @@ export function bookGoToStep(step) {
 
 export function setupBookingForm() {
   const imgEl = document.getElementById('summaryPropertyImg');
-  if (imgEl && state.currentPropertyImg) imgEl.src = state.currentPropertyImg;
+  // Siempre fijamos un src: si no hay foto, el placeholder (el onerror del HTML
+  // sólo dispara ante un src que falla, no ante un src ausente → icono roto).
+  if (imgEl) imgEl.src = state.currentPropertyImg || PLACEHOLDER_IMG;
 
   const metaEl = document.getElementById('summaryPropertyMeta');
   if (metaEl) {

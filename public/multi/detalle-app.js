@@ -1,6 +1,7 @@
 import { db, auth } from '../shared/firebase.js';
 import { state } from '../shared/state.js';
 import { packBasePrice, resolvePackPct } from '../shared/pack-pricing.js';
+import { propertyImages, propertyCover, PLACEHOLDER_IMG } from '../shared/utils.js';
 
 import {
   renderCalendar,
@@ -230,12 +231,13 @@ function renderDetailIntoContent(data, tipo) {
   const capacidad = data.capacidad ? Number(data.capacidad) : null;
   const precio = typeof data.precioBase === 'number' ? data.precioBase : null;
 
-  const images = Array.isArray(data.images) ? data.images.filter(Boolean) : [];
-  const fotosLegacy = Array.isArray(data.fotos) ? data.fotos.filter(Boolean) : [];
-  const fotos = images.length ? images : fotosLegacy;
+  // Misma estructura que el listado: prioriza images[], cae a fotos[] (legacy).
+  const fotos = propertyImages(data);
 
   const imageMain = safeText(data.imageMain, '').trim();
   const hero = imageMain && fotos.includes(imageMain) ? imageMain : fotos[0] || '';
+  // Fallback visual: si no hay ninguna foto, el placeholder (no un icono roto).
+  const heroSrc = hero || PLACEHOLDER_IMG;
 
   if (titleEl) titleEl.textContent = nombre;
   if (taglineEl) taglineEl.textContent = ciudad ? `${ciudad}` : '';
@@ -253,11 +255,8 @@ function renderDetailIntoContent(data, tipo) {
 
             <button class="inline-nav inline-prev" id="inlinePrev" type="button" aria-label="Anterior">‹</button>
 
-            ${
-              hero
-                ? `<img id="inlineHeroImg" src="${hero}" alt="${nombre}" decoding="async" fetchpriority="high">`
-                : ''
-            }
+            <img id="inlineHeroImg" src="${heroSrc}" alt="${nombre}" decoding="async" fetchpriority="high" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
+
 
             <button class="inline-nav inline-next" id="inlineNext" type="button" aria-label="Siguiente">›</button>
 
@@ -358,12 +357,12 @@ function renderDetailIntoContent(data, tipo) {
 
   if (actions) actions.style.display = 'block';
 
-  state.currentPropertyImg = fotos[0] || '';
+  state.currentPropertyImg = hero || '';
   state.currentPropertyCity = ciudad || '';
   state.currentPropertyCap = capacidad || '';
 
   const rsImg = document.getElementById('rsImg');
-  if (rsImg && fotos[0]) rsImg.style.backgroundImage = `url("${fotos[0]}")`;
+  if (rsImg) rsImg.style.backgroundImage = `url("${heroSrc}")`;
 
   const rsName = document.getElementById('rsName');
   if (rsName) rsName.textContent = nombre;
@@ -755,6 +754,17 @@ async function loadDetail() {
           pct
         );
         if (derived != null) data.precioBase = derived;
+
+        // Si el pack no trae fotos propias, hereda las de su primera unidad (la que haya)
+        // para que ficha, galería y resumen muestren imagen en vez de un placeholder.
+        if (!propertyImages(data).length) {
+          const unit = propertyImages(aptA.data()).length ? aptA.data() : aptB.data();
+          const unitImgs = propertyImages(unit);
+          if (unitImgs.length) {
+            data.images = unitImgs;
+            data.imageMain = propertyCover(unit);
+          }
+        }
       }
     } else {
       state.currentPackPct = null;

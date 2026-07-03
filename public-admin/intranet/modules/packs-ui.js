@@ -591,6 +591,27 @@ export function createPacksUI({ db, storage, serverTimestamp, fetchPacks, savePa
     );
   }
 
+  // Carga el calendario real del pack: disponibilidad (fechas ocupadas de las
+  // unidades vía reservas_public) y precios (auto packPct×unidades + manuales de
+  // /packs/{id}/prices). Mismo patrón que loadCalendarsForProperty en apartamentos.
+  // Se reutiliza desde fillFormWithPack (Editar todo / escritorio) y desde
+  // showPackInlineEditor (Editar directo en móvil), para que el calendario
+  // aparezca con datos reales en un solo clic.
+  // NOTA (salvaguarda): pack-calendar.js es de SOLO LECTURA (no escribe precios),
+  // así que no hay vía para sobrescribir /packs/{id}/prices con 0€ desde aquí.
+  async function loadCalendarForPack(pack) {
+    if (!pack?.id) return;
+    try {
+      if (typeof packCalendar?.ensureCalendarForPack === "function") {
+        await packCalendar.ensureCalendarForPack({
+          packId: pack.id,
+          packName: pack.nombre || pack.id,
+          sourceProperties: pack.sourceProperties || [],
+        });
+      }
+    } catch (_) {}
+  }
+
   async function fillFormWithPack(pack) {
     if (!pack?.id) return;
 
@@ -632,16 +653,7 @@ export function createPacksUI({ db, storage, serverTimestamp, fetchPacks, savePa
     mainImage = mainOk;
     renderPhotos();
 
-    try {
-      const ctx = {
-        packId: pack.id,
-        packName: pack.nombre || pack.id,
-        sourceProperties: pack.sourceProperties || [],
-      };
-      if (typeof packCalendar?.ensureCalendarForPack === "function") {
-        await packCalendar.ensureCalendarForPack(ctx);
-      }
-    } catch (_) {}
+    await loadCalendarForPack(pack);
 
     baseQuickSnapshot = quickSnapshot();
     basePhotoSnapshot = photoSnapshot();
@@ -736,6 +748,12 @@ export function createPacksUI({ db, storage, serverTimestamp, fetchPacks, savePa
     row.appendChild(cell);
     clickedTr.insertAdjacentElement('afterend', row);
     setTimeout(() => div.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+
+    // UX directa (igual que apartamentos): al pulsar "Editar" el calendario del
+    // pack carga YA con sus datos reales, sin pasar por "Editar todo".
+    loadCalendarForPack(pack).catch((e) =>
+      console.error("Error cargando el calendario del pack:", e)
+    );
   }
 
   function renderPacksTable() {
@@ -756,14 +774,14 @@ export function createPacksUI({ db, storage, serverTimestamp, fetchPacks, savePa
       const isSel = selectedPack?.id && p.id === selectedPack.id;
       return `
         <tr data-row-id="${escapeHtml(p.id)}" class="${isSel ? "is-selected" : ""}">
-          <td>${escapeHtml(p.orden ?? "")}</td>
-          <td>${escapeHtml(p.nombre ?? "")}</td>
-          <td>${escapeHtml(p.groupKey ?? "")}</td>
-          <td>${escapeHtml((p.sourceProperties || []).join(" + ") || "—")}</td>
-          <td>${escapeHtml(p.capacidad ?? "")}</td>
-          <td>${escapeHtml(precio)}</td>
-          <td>${p.activa ? "Sí" : "No"}</td>
-          <td><button class="btn-secondary" data-edit-pack-id="${escapeHtml(p.id)}">Editar</button></td>
+          <td data-label="Orden">${escapeHtml(p.orden ?? "")}</td>
+          <td data-label="Nombre" class="td-title">${escapeHtml(p.nombre ?? "")}</td>
+          <td data-label="Grupo">${escapeHtml(p.groupKey ?? "")}</td>
+          <td data-label="Apartamentos">${escapeHtml((p.sourceProperties || []).join(" + ") || "—")}</td>
+          <td data-label="Capacidad">${escapeHtml(p.capacidad ?? "")}</td>
+          <td data-label="Precio base">${escapeHtml(precio)}</td>
+          <td data-label="Activo">${p.activa ? "Sí" : "No"}</td>
+          <td data-label="" class="td-actions"><button class="btn-secondary" data-edit-pack-id="${escapeHtml(p.id)}">Editar</button></td>
         </tr>
       `;
     }).join("");
