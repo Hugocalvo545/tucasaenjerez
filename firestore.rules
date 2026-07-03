@@ -191,6 +191,17 @@ service cloud.firestore {
 
       allow write: if isAdmin();
 
+      // El dueño de la reserva puede marcar SOLO unreadHost en SU chat (al enviar mensaje).
+      // El doc padre /chats/{chatId} no lo crea el webhook, así que el primer .set(merge) del
+      // huésped puede ser un create: se permite acotado a que el doc contenga solo unreadHost.
+      // No reabre nada: cualquier otro campo (lastMessage, unreadGuest, etc.) → denegado.
+      allow create: if isSignedIn()
+        && request.auth.uid == get(/databases/$(database)/documents/reservas/$(chatId)).data.userId
+        && request.resource.data.keys().hasOnly(["unreadHost"]);
+      allow update: if isSignedIn()
+        && request.auth.uid == get(/databases/$(database)/documents/reservas/$(chatId)).data.userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["unreadHost"]);
+
       match /mensajes/{mensajeId} {
 
         allow read: if isAdmin()
