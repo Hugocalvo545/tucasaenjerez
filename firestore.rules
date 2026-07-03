@@ -30,10 +30,28 @@ service cloud.firestore {
         .hasOnly(keys);
     }
 
+    // Un update NO debe tocar campos de fidelidad: points/nivel solo los escribe el servidor
+    // (Admin SDK, que se salta estas reglas). Robusto ante docs viejos sin el campo.
+    function touchesFidelity() {
+      return request.resource.data.diff(resource.data)
+        .affectedKeys()
+        .hasAny(["points", "nivel", "level"]);
+    }
+
     /* ========= USUARIOS ========= */
 
     match /usuarios/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read: if isOwner(userId);
+
+      // Alta del propio doc al registrarse: points debe empezar en 0 o ausente. Cierra el
+      // ataque E también por la vía del create (set con points:999999 en doc nuevo).
+      allow create: if isOwner(userId)
+        && (!("points" in request.resource.data) || request.resource.data.points == 0);
+
+      // Edición de perfil por el dueño: nombre/contacto sí, points/nivel NUNCA.
+      allow update: if isOwner(userId) && !touchesFidelity();
+
+      allow delete: if isOwner(userId);
 
       match /huespedes_frecuentes/{docId} {
         allow read, write: if isOwner(userId);
@@ -95,14 +113,10 @@ service cloud.firestore {
       allow read: if isSignedIn()
         && (resource == null || resource.data.userId == request.auth.uid || isAdmin());
 
-      // La Cloud Function (webhook) escribe con Admin SDK — no necesita esta regla.
-      // La mantenemos por si se usa el flujo cliente directo como fallback.
-      allow create: if isSignedIn()
-        && request.resource.data.userId == request.auth.uid
-        && request.resource.data.propertyId is string
-        && request.resource.data.checkInISO is string
-        && request.resource.data.checkOutISO is string
-        && request.resource.data.checkInISO <= request.resource.data.checkOutISO;
+      // El cliente NO crea reservas: todo pasa por createCheckoutSession → webhook (Admin SDK,
+      // que se salta estas reglas). El "hold" de fechas vive en /holds y el pending en
+      // /pending_bookings, no aquí. Cierra el ataque A (reserva fantasma confirmed/paid/total:0).
+      allow create: if false;
 
       allow update: if isSignedIn()
         && request.auth.uid == resource.data.userId
@@ -218,6 +232,15 @@ service cloud.firestore {
     match /registro_viajeros/{registroId} {
       allow read: if isAdmin();
       allow write: if false;  // solo Admin SDK del webhook
+    }
+
+    /* ========= CONFIGURACIÓN (INTRANET) ========= */
+
+    // Ajustes editables desde la intranet (p.ej. /config/ses → código de establecimiento
+    // SES.HOSPEDAJES). Solo la intranet lo consume, por eso lectura y escritura son de admin.
+    match /config/{docId} {
+      allow read:  if isAdmin();
+      allow write: if isAdmin();
     }
 
     /* ========= CORTAFUEGOS FINAL ========= */

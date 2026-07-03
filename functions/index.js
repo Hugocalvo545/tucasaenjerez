@@ -35,6 +35,89 @@ const ALLOWED_ORIGINS = [
 ];
 
 const { buildEmailHTML, escapeHtml } = require("./email-templates");
+const { resolvePackPct, packNightlyPriceFromUnits, calculateLevel } = require("./pricing");
+
+class PriceError extends Error {}         // noche sin precio / datos incompletos
+class AvailabilityError extends Error {}  // fecha ocupada
+
+// Noches [ciISO, coISO) en ISO yyyy-mm-dd (UTC, sin desfase de zona).
+function nightlyISOsBetween(ciISO, coISO) {
+  const out = [];
+  const d   = new Date(`${ciISO}T00:00:00Z`);
+  const end = new Date(`${coISO}T00:00:00Z`);
+  while (d < end) {
+    out.push(d.toISOString().slice(0, 10));
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
+  return out;
+}
+
+// Mapa dateISO → price de /{collection}/{id}/prices, igual que construye el front.
+async function readPricesMap(collection, id) {
+  const qs = await db.collection(collection).doc(id).collection("prices").get();
+  const m = new Map();
+  qs.forEach((d) => {
+    const x = d.data();
+    if (x && x.dateISO && typeof x.price === "number") m.set(x.dateISO, x.price);
+  });
+  return m;
+}
+
+// Suma por-noche recalculada en servidor (pre-descuento). Lanza PriceError si falta precio.
+async function serverBaseTotal({ propertyTipo, propertyId, sourceProperties, isos }) {
+  if (propertyTipo === "pack") {
+    const units = Array.isArray(sourceProperties) ? sourceProperties.filter(Boolean) : [];
+    if (units.length < 2) throw new PriceError("Pack sin las dos unidades.");
+    const packDoc = await db.collection("packs").doc(propertyId).get();
+    const pct     = resolvePackPct(packDoc.data());
+    const maps    = await Promise.all(units.map((u) => readPricesMap("apartamentos", u)));
+    let total = 0;
+    for (const iso of isos) {
+      const unitPrices = maps.map((m) => m.get(iso)); // undefined si falta esa unidad
+      const derived = packNightlyPriceFromUnits(unitPrices, pct); // null si falta alguna unidad
+      if (derived == null) throw new PriceError(`Noche ${iso} sin precio en alguna unidad del pack.`);
+      total += derived;
+    }
+    return total;
+  }
+  // Apto: override /prices/{iso} si existe, si no precioBase del doc.
+  const aptoDoc    = await db.collection("apartamentos").doc(propertyId).get();
+  const precioBase = Number(aptoDoc.data()?.precioBase);
+  const map        = await readPricesMap("apartamentos", propertyId);
+  let total = 0;
+  for (const iso of isos) {
+    const price = map.has(iso) ? Number(map.get(iso)) : precioBase;
+    if (!Number.isFinite(price)) throw new PriceError(`Noche ${iso} sin precio.`);
+    total += price;
+  }
+  return total;
+}
+
+// Última red anti-doble-reserva: reservas_public confirmadas + holds ajenos vivos.
+async function assertAvailable({ availabilityIds, isos, ciISO, coISO, uid }) {
+  const nightSet = new Set(isos);
+  const now = new Date();
+  for (const pid of availabilityIds) {
+    const rp = await db.collection("reservas_public").where("propertyId", "==", pid).get();
+    for (const doc of rp.docs) {
+      const d = doc.data() || {};
+      // Solape de rangos [ci,co): existente.ci < mi.co && existente.co > mi.ci
+      if (d.checkInISO && d.checkOutISO && d.checkInISO < coISO && d.checkOutISO > ciISO) {
+        throw new AvailabilityError(`Fechas ya reservadas en ${pid}.`);
+      }
+    }
+    const hq = await db.collection("holds").where("propertyId", "==", pid).get();
+    for (const doc of hq.docs) {
+      const d = doc.data() || {};
+      if (d.userId === uid) continue;                 // hold propio: no bloquea
+      const exp = d.expiresAt?.toDate?.() ?? d.expiresAt;
+      if (exp && exp < now) continue;                 // hold caducado: no bloquea
+      if (Array.isArray(d.dates) && d.dates.some((x) => nightSet.has(x))) {
+        throw new AvailabilityError(`Fechas bloqueadas por otro usuario en ${pid}.`);
+      }
+    }
+  }
+}
 
 function firestoreIncrement(n) {
   return admin.firestore.FieldValue.increment(n);
@@ -107,7 +190,7 @@ exports.createCheckoutSession = onRequest(
       reservaId, propertyId, propertyName,
       checkInISO, checkOutISO, checkIn, checkOut,
       nights, numAdults, numChildren,
-      totalPrice, pointsEarned,
+      totalPrice, pointsEarned, descuentoAplicado,
       name, email, phone, notes,
       guests, guestsForExport,
       holdIds, propertyTipo,
@@ -147,6 +230,69 @@ exports.createCheckoutSession = onRequest(
         }
       }
 
+      // ── RUTA DEL DINERO: recálculo + verificación en servidor ──────────────────────────
+      // IDs de disponibilidad: pack → unidades; apto → self (espejo de getAvailabilityPropertyIds).
+      const availabilityIds = (propertyTipo === "pack")
+        ? (Array.isArray(sourceProperties) ? sourceProperties.filter(Boolean) : [])
+        : [propertyId];
+
+      const isos = nightlyISOsBetween(checkInISO, checkOutISO);
+      if (!isos.length) { res.status(400).json({ error: "Rango de fechas inválido." }); return; }
+      const serverNights = isos.length;
+
+      // (4) Disponibilidad en el mismo viaje — última red contra la carrera de doble reserva.
+      try {
+        await assertAvailable({ availabilityIds, isos, ciISO: checkInISO, coISO: checkOutISO, uid });
+      } catch (e) {
+        if (e instanceof AvailabilityError) {
+          console.warn(`⛔ Disponibilidad ${reservaId}: ${e.message}`);
+          res.status(409).json({ error: "Estas fechas acaban de ocuparse. Elige otras." }); return;
+        }
+        throw e;
+      }
+
+      // (1) Recalcular el importe en servidor a partir de Firestore.
+      let serverBase;
+      try {
+        serverBase = await serverBaseTotal({ propertyTipo, propertyId, sourceProperties, isos });
+      } catch (e) {
+        if (e instanceof PriceError) {
+          console.error(`💶 Precio ${reservaId}: ${e.message}`);
+          res.status(409).json({ error: "Estas fechas no tienen precio disponible. Elige otras." }); return;
+        }
+        throw e;
+      }
+
+      // Descuento por nivel: puntos del MOMENTO DEL PAGO (servidor = fuente de verdad).
+      const userSnap    = await db.collection("usuarios").doc(uid).get();
+      const points      = Number(userSnap.data()?.points) || 0;
+      const discount    = calculateLevel(points).discount;
+      const discountAmt = discount > 0 ? Math.round(serverBase * discount / 100) : 0;
+      const serverFinal = serverBase - discountAmt;               // mismo redondeo que el front
+
+      // (2) Comparar con el total del cliente (en céntimos enteros).
+      const serverCents = Math.round(serverFinal * 100);
+      const clientCents = Math.round(Number(totalPrice) * 100);
+      if (Math.abs(serverCents - clientCents) > 1) {
+        // ¿La diferencia se explica SOLO por el nivel (base idéntica, otro % de descuento)?
+        const clientDiscount = Number(descuentoAplicado) || 0;
+        const clientExpected = serverBase - (clientDiscount > 0 ? Math.round(serverBase * clientDiscount / 100) : 0);
+        if (Math.abs(Math.round(clientExpected * 100) - clientCents) <= 1) {
+          // Nivel cambió entre cargar el checkout y pagar. Base OK → no es fraude: cobramos el
+          // importe del servidor (nivel actual) y lo dejamos trazado.
+          console.warn(`⚠️  Nivel cambiado en ${reservaId}: cliente ${clientDiscount}% vs servidor ${discount}%. Se cobra ${serverFinal}€ (servidor).`);
+        } else {
+          // Base distinta → manipulación o precio cambiado a mitad. No cobramos ninguno.
+          console.error(`🚫 Descuadre de precio ${reservaId}: servidor=${serverFinal}€ base=${serverBase}€ cliente=${totalPrice}€. Sesión rechazada.`);
+          res.status(400).json({ error: "El precio ha cambiado. Recarga la página y vuelve a intentarlo." });
+          return;
+        }
+      }
+
+      // (3) unit_amount SIEMPRE del servidor. pointsEarned re-derivado del total del servidor.
+      const chargeCents        = serverCents;
+      const serverPointsEarned = Math.max(1, Math.floor(serverFinal));
+
       await db.collection("pending_bookings").doc(reservaId).set({
         reservaId,
         userId:          uid,
@@ -156,11 +302,11 @@ exports.createCheckoutSession = onRequest(
         checkOutISO,
         checkIn,
         checkOut,
-        nights:          Number(nights),
+        nights:          serverNights,
         numAdults:       Number(numAdults),
         numChildren:     Number(numChildren),
-        totalPrice:      Number(totalPrice),
-        pointsEarned:    Number(pointsEarned),
+        totalPrice:      serverFinal,
+        pointsEarned:    serverPointsEarned,
         name,
         email,
         phone,
@@ -182,9 +328,9 @@ exports.createCheckoutSession = onRequest(
           quantity: 1,
           price_data: {
             currency:     "eur",
-            unit_amount:  Math.round(Number(totalPrice) * 100),
+            unit_amount:  chargeCents,
             product_data: {
-              name:        `${propertyName} — ${nights} noche${nights !== 1 ? "s" : ""}`,
+              name:        `${propertyName} — ${serverNights} noche${serverNights !== 1 ? "s" : ""}`,
               description: `Check-in: ${checkIn} · Check-out: ${checkOut} · ${numAdults} adulto${numAdults !== 1 ? "s" : ""}${numChildren ? ` · ${numChildren} niño${numChildren !== 1 ? "s" : ""}` : ""}`,
             },
           },
@@ -536,6 +682,19 @@ exports.onReservaCancelled = onDocumentUpdated(
       );
     });
     await batch.commit();
+
+    // ─── Registro de viajeros (SES.HOSPEDAJES) ──────────────────────────────────────────
+    // Una reserva cancelada NO debe comunicarse al SES (el viajero no viene). Marcamos su
+    // doc de registro como "cancelada" (tercer estado terminal de la comunicación, junto a
+    // pendiente/enviado). Idempotente: set(merge) reaplicado deja el mismo estado; el .catch
+    // evita romper el trigger si el doc no existe (reservas antiguas anteriores al registro).
+    await db.collection("registro_viajeros").doc(reservaId).set(
+      {
+        estado:      "cancelada",
+        canceladaAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    ).catch((e) => console.warn(`⚠️  registro_viajeros ${reservaId}: no se pudo marcar cancelada:`, e?.message || e));
 
     // ─── Refund en Stripe (solo doc PRINCIPAL; los sombra ya salen por la guarda "__") ───
     // Para un PACK el cobro fue único, así que se hace UN solo refund del pago (no uno por unidad).

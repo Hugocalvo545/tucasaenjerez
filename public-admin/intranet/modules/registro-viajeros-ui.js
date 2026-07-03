@@ -3,11 +3,22 @@
 import { db } from "../../shared/firebase.js";
 
 // Código de establecimiento asignado por el Ministerio del Interior para SES.HOSPEDAJES.
-// PRODUCCIÓN: sustituir "PENDIENTE_ASIGNAR_POR_MINISTERIO" por el código real.
-// Cómo obtenerlo: contactar con la Comisaría de Policía local o en
+// Ya NO se hardcodea: el propietario lo introduce desde la intranet y se guarda en Firestore
+// (/config/ses.codigoEstablecimiento). Se obtiene en la Comisaría de Policía local o en
 // https://sede.policia.gob.es/portalCiudadano/hospedajes/
-// El XML generado NO será válido hasta que se rellene este valor.
-const CODIGO_ESTABLECIMIENTO = "PENDIENTE_ASIGNAR_POR_MINISTERIO";
+// Mientras esté vacío, el XML NO se genera (evita mandar un fichero inválido al SES).
+let sesCodigoEstablecimiento = "";
+
+async function loadSesCodigo() {
+  try {
+    const doc = await db.collection("config").doc("ses").get();
+    sesCodigoEstablecimiento = String(doc.exists ? (doc.data().codigoEstablecimiento || "") : "").trim();
+  } catch (err) {
+    console.error("Error leyendo /config/ses:", err);
+    sesCodigoEstablecimiento = "";
+  }
+  return sesCodigoEstablecimiento;
+}
 
 let initialized    = false;
 let currentRegistros = [];
@@ -68,15 +79,23 @@ function renderTable(registros) {
   }
 
   body.innerHTML = registros.map(r => {
-    const enviado = r.estado === "enviado";
-    const estadoClass = enviado ? "color:#1e7e34;font-weight:600;" : "color:#856404;font-weight:600;";
+    // estado = estado de la COMUNICACIÓN al SES: pendiente | enviado | cancelada.
+    // "cancelada" (reserva anulada) es visible pero marcada; no se comunica ni se exporta.
+    const cancelada = r.estado === "cancelada";
+    const enviado   = r.estado === "enviado";
+    const estadoStyle = cancelada
+      ? "background:#f3f4f6;color:#6b7280;border:1px solid #d1d5db;"
+      : enviado
+        ? "background:#e6f4ea;color:#1e7e34;border:1px solid #b7e0c2;"
+        : "background:#fff8e1;color:#856404;border:1px solid #ffe082;";
+    const estadoLabel = cancelada ? "Cancelada" : enviado ? "Enviado" : "Pendiente";
     return `
-      <tr>
+      <tr${cancelada ? ' style="opacity:.7;"' : ""}>
         <td>${escHtml(r.checkIn || r.checkInISO)}</td>
         <td>${escHtml(r.checkOut || r.checkOutISO)}</td>
         <td>${escHtml(r.propertyName || r.propertyId)}</td>
         <td>${(r.viajeros || []).length}</td>
-        <td><span style="${estadoClass}">${enviado ? "Enviado" : "Pendiente"}</span></td>
+        <td><span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:.78rem;font-weight:600;${estadoStyle}">${estadoLabel}</span></td>
         <td>
           <button class="btn-secondary btn-sm rv-detail-btn" data-id="${escHtml(r.id || r.reservaId)}">Ver viajeros</button>
         </td>
@@ -168,9 +187,17 @@ async function loadRegistros() {
     currentRegistros = registros;
     renderTable(registros);
 
-    const n = registros.length;
-    if (statusEl) statusEl.textContent = n ? `${n} registro${n !== 1 ? "s" : ""} encontrado${n !== 1 ? "s" : ""}.` : "Sin registros para el período seleccionado.";
-    setExportBtns(n > 0);
+    // La tabla muestra TODO (incluidas canceladas, con badge). Los exports solo llevan las
+    // comunicables: las canceladas no se envían al SES. Los botones se habilitan por ese conteo.
+    const n           = registros.length;
+    const exportables = registros.filter(r => r.estado !== "cancelada").length;
+    const canceladas  = n - exportables;
+    if (statusEl) {
+      statusEl.textContent = n
+        ? `${n} registro${n !== 1 ? "s" : ""} · ${exportables} exportable${exportables !== 1 ? "s" : ""}${canceladas ? ` · ${canceladas} cancelada${canceladas !== 1 ? "s" : ""} (excluidas)` : ""}.`
+        : "Sin registros para el período seleccionado.";
+    }
+    setExportBtns(exportables > 0);
   } catch (err) {
     console.error("Error cargando registro_viajeros:", err);
     if (statusEl) statusEl.textContent = "Error al cargar. Revisa que el índice de Firestore esté creado.";
@@ -251,10 +278,26 @@ export async function start() {
         <button id="rvPdfBtn" class="btn-secondary" disabled>Exportar PDF</button>
         <button id="rvXmlBtn" class="btn-secondary" disabled>Exportar XML (SES.HOSPEDAJES)</button>
       </div>
-      <p style="margin-top:.75rem;font-size:.82rem;color:#b05b00;background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:8px 12px;">
+      <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid #e0e0e0;">
+        <label style="display:block;font-size:.9rem;font-weight:600;margin-bottom:.35rem;">
+          Código de establecimiento SES.HOSPEDAJES
+        </label>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+          <input type="text" id="rvSesCodigo" placeholder="p. ej. 0000012345"
+            style="min-width:220px;padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:.9rem;" />
+          <button id="rvSesSaveBtn" class="btn-primary">Guardar código</button>
+          <span id="rvSesSaveStatus" class="muted" style="font-size:.82rem;"></span>
+        </div>
+        <p class="muted" style="font-size:.78rem;margin:.4rem 0 0;">
+          Lo asigna el Ministerio del Interior (Comisaría local o
+          sede.policia.gob.es/portalCiudadano/hospedajes). El XML no se genera hasta rellenarlo.
+        </p>
+      </div>
+
+      <p id="rvSesWarning" style="margin-top:.75rem;font-size:.82rem;color:#b05b00;background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:8px 12px;display:none;">
         ⚠️ <strong>Código de establecimiento pendiente.</strong>
         El XML generado no será válido hasta que se obtenga el código del Ministerio del Interior
-        y se configure en el sistema. Tramitar antes del primer envío a SES.HOSPEDAJES.
+        y se configure arriba. Tramitar antes del primer envío a SES.HOSPEDAJES.
       </p>
     </div>`;
 
@@ -276,9 +319,54 @@ export async function start() {
   document.getElementById("rvCsvBtn")?.addEventListener("click", () => exportCSV(currentRegistros));
   document.getElementById("rvPdfBtn")?.addEventListener("click", () => exportPDF(currentRegistros));
   document.getElementById("rvXmlBtn")?.addEventListener("click", () => exportXML(currentRegistros));
+
+  // Código de establecimiento SES: cargar valor guardado y sincronizar input + aviso.
+  await loadSesCodigo();
+  syncSesUI();
+
+  document.getElementById("rvSesSaveBtn")?.addEventListener("click", saveSesCodigo);
+}
+
+function syncSesUI() {
+  const input   = document.getElementById("rvSesCodigo");
+  const warning = document.getElementById("rvSesWarning");
+  if (input && document.activeElement !== input) input.value = sesCodigoEstablecimiento;
+  if (warning) warning.style.display = sesCodigoEstablecimiento ? "none" : "block";
+}
+
+async function saveSesCodigo() {
+  const input  = document.getElementById("rvSesCodigo");
+  const status = document.getElementById("rvSesSaveStatus");
+  const btn    = document.getElementById("rvSesSaveBtn");
+  if (!input) return;
+
+  const value = input.value.trim();
+  if (btn) btn.disabled = true;
+  if (status) { status.style.color = ""; status.textContent = "Guardando…"; }
+
+  try {
+    // merge:true → no pisa otros ajustes que /config/ses pueda tener en el futuro.
+    await db.collection("config").doc("ses").set({ codigoEstablecimiento: value }, { merge: true });
+    sesCodigoEstablecimiento = value;
+    syncSesUI();
+    if (status) { status.style.color = "#1e7e34"; status.textContent = value ? "Código guardado." : "Código borrado."; }
+  } catch (err) {
+    console.error("Error guardando /config/ses:", err);
+    if (status) { status.style.color = "#c0392b"; status.textContent = "Error al guardar (¿permisos?)."; }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+// Criterio legal: al SES solo se comunican reservas activas/confirmadas. Las canceladas se
+// excluyen de TODO export (el viajero no viene). NO se filtra por "estancia completada":
+// la comunicación va al inicio de la estancia.
+function toExport(registros) {
+  return (registros || []).filter(r => r.estado !== "cancelada");
 }
 
 export function exportCSV(registros) {
+  registros = toExport(registros);
   if (!registros?.length) return;
 
   const q    = currentQuarter || getCurrentQuarter();
@@ -324,6 +412,7 @@ export function exportCSV(registros) {
 }
 
 export async function exportPDF(registros) {
+  registros = toExport(registros);
   if (!registros?.length) return;
 
   const q    = currentQuarter || getCurrentQuarter();
@@ -453,7 +542,15 @@ export async function exportPDF(registros) {
 }
 
 export function exportXML(registros) {
+  registros = toExport(registros);
   if (!registros?.length) return;
+
+  // Sin código de establecimiento NO se genera XML (sería inválido para el SES). Se mantiene
+  // el aviso ámbar visible en la pestaña; avisamos también al pulsar el botón.
+  if (!sesCodigoEstablecimiento) {
+    alert("Falta el código de establecimiento SES.HOSPEDAJES. Introdúcelo y guárdalo antes de generar el XML.");
+    return;
+  }
 
   const q    = currentQuarter || getCurrentQuarter();
   const year = currentYear    || new Date().getFullYear();
@@ -507,7 +604,7 @@ ${viajerosTags}
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <peticion>
   <cabecera>
-    <codigoEstablecimiento>${x(CODIGO_ESTABLECIMIENTO)}</codigoEstablecimiento>
+    <codigoEstablecimiento>${x(sesCodigoEstablecimiento)}</codigoEstablecimiento>
     <fechaGeneracion>${today}</fechaGeneracion>
   </cabecera>
   <partes>

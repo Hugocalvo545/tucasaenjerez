@@ -25,6 +25,22 @@ export function createReservasUI({
     if (reservasBadge) reservasBadge.style.display = "none";
   }
 
+  // Doc-sombra que el webhook crea por cada unidad de un pack (id "<reservaId>__<unidad>", campo packId).
+  // Existen solo para bloquear los calendarios de las unidades; NO deben listarse como reservas
+  // independientes (evita mostrar 3 filas + 3 chats por un pack). El doc principal no tiene ninguna marca.
+  function isPackShadow(r) {
+    return !!r?.packId || String(r?.reservaId || r?.id || "").includes("__");
+  }
+
+  // Doc principal de un pack: persiste propertyTipo "pack" y sourceProperties (las unidades).
+  function isPack(r) {
+    return String(r?.propertyTipo || "").toLowerCase() === "pack";
+  }
+
+  function packUnits(r) {
+    return Array.isArray(r?.sourceProperties) ? r.sourceProperties.filter(Boolean) : [];
+  }
+
   function getStatusLabel(r) {
     const st = String(r?.status || "").toLowerCase();
     if (st === "cancelled" || st === "canceled" || r?.cancelled === true) return "Cancelada";
@@ -39,12 +55,16 @@ export function createReservasUI({
   function renderReservasTable(snapshot) {
     if (!reservasBody) return;
 
-    if (!reservasCache.length) {
+    // Ocultar los docs-sombra del pack: se ve UNA sola fila (el doc principal) con UN chat.
+    // No se borran (siguen bloqueando calendarios); es solo presentación.
+    const visibleReservas = reservasCache.filter((r) => !isPackShadow(r));
+
+    if (!visibleReservas.length) {
       reservasBody.innerHTML = `<tr><td colspan="6">No hay reservas todavía.</td></tr>`;
       return;
     }
 
-    reservasBody.innerHTML = reservasCache
+    reservasBody.innerHTML = visibleReservas
       .map((r) => {
         const total =
           r.totalPrice != null ? String(r.totalPrice) : r.total_price != null ? String(r.total_price) : "-";
@@ -119,13 +139,20 @@ export function createReservasUI({
         ? `<button id="cancelReservaBtn" class="btn-secondary" style="margin-top:10px">Cancelar reserva (admin)</button>`
         : "";
 
+    // Pack: el doc principal lleva el total COMPLETO del pack; sus unidades se muestran como info.
+    const units = isPack(r) ? packUnits(r) : [];
+    const packInfo = units.length
+      ? `<p><strong>Pack — unidades (${units.length}):</strong> ${escapeHtml(units.join(", "))}</p>`
+      : "";
+
     reservaDetailBox.innerHTML = `
       <p><strong>Alojamiento:</strong> ${escapeHtml(r.propertyName || r.propertyId || "")}</p>
+      ${packInfo}
       <p><strong>Reserva ID:</strong> ${escapeHtml(r.reservaId || r.id)}</p>
       <p><strong>Estado:</strong> ${escapeHtml(status)}</p>
       <p><strong>Check-in:</strong> ${escapeHtml(r.checkIn || "")}</p>
       <p><strong>Check-out:</strong> ${escapeHtml(r.checkOut || "")}</p>
-      <p><strong>Total:</strong> ${escapeHtml(total)}</p>
+      <p><strong>Total${units.length ? " (pack completo)" : ""}:</strong> ${escapeHtml(total)}</p>
       ${r.observations ? `<p><strong>Observaciones:</strong> ${escapeHtml(r.observations)}</p>` : ""}
       ${cancelBtn}
     `;
@@ -148,6 +175,7 @@ export function createReservasUI({
     const apell  = String(reserva.surname || '').trim();
     const huesped = (nombre || apell) ? `${nombre} ${apell}`.trim() : (reserva.email || 'Huésped');
     const status  = getStatusLabel(reserva);
+    const units = isPack(reserva) ? packUnits(reserva) : [];
 
     const row = document.createElement('tr');
     row.className = 'reserva-inline-row';
@@ -164,9 +192,10 @@ export function createReservasUI({
         <span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:#eef1f7;color:#2a3142">${escapeHtml(status)}</span>
       </div>
       <p style="margin:4px 0;font-size:13px"><strong>Huésped:</strong> ${escapeHtml(huesped)}</p>
+      ${units.length ? `<p style="margin:4px 0;font-size:13px"><strong>Pack — unidades (${units.length}):</strong> ${escapeHtml(units.join(', '))}</p>` : ''}
       <p style="margin:4px 0;font-size:13px"><strong>Check-in:</strong> ${escapeHtml(reserva.checkIn || '—')}</p>
       <p style="margin:4px 0;font-size:13px"><strong>Check-out:</strong> ${escapeHtml(reserva.checkOut || '—')}</p>
-      <p style="margin:4px 0;font-size:13px"><strong>Total:</strong> ${escapeHtml(total)}€</p>
+      <p style="margin:4px 0;font-size:13px"><strong>Total${units.length ? ' (pack completo)' : ''}:</strong> ${escapeHtml(total)}€</p>
       ${reserva.observations ? `<p style="margin:4px 0;font-size:13px;color:#555"><strong>Obs:</strong> ${escapeHtml(reserva.observations)}</p>` : ''}
       <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
         <button type="button" class="btn-primary btn-sm ri-chat">💬 Ver chat</button>
