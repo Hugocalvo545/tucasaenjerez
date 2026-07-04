@@ -5,6 +5,7 @@ export function createReservasUI({
   serverTimestamp,
   calendarAdmin,
   subscribeToReservas,
+  subscribeToChatsIndex,
 }) {
   const reservasBody = document.getElementById("reservasBody");
   const reservasBadge = document.getElementById("reservasBadge");
@@ -16,6 +17,24 @@ export function createReservasUI({
   let reservasCache = [];
   let unsub = null;
   let firstSnapshot = true;
+
+  // Índice de chats (para marcar qué reservas tienen mensajes sin leer). El reset
+  // (unreadHost:0) lo hace chat-ui al ABRIR el chat de una reserva, no aquí.
+  let chatsCache = new Map();
+  let unsubChats = null;
+
+  function hasUnreadHost(reservaId) {
+    const u = Number(chatsCache.get(reservaId)?.unreadHost || 0);
+    return Number.isFinite(u) && u > 0 && u < 100000;
+  }
+
+  // Marca (punto rojo + resalte) las filas cuyo chat tiene no-leídos del cliente.
+  function paintUnreadMarks() {
+    reservasBody?.querySelectorAll("tr.reserva-row[data-reserva-id]").forEach((tr) => {
+      const id = tr.getAttribute("data-reserva-id");
+      tr.classList.toggle("has-unread", hasUnreadHost(id));
+    });
+  }
 
   function showReservasBadge() {
     if (reservasBadge) reservasBadge.style.display = "inline-block";
@@ -270,6 +289,7 @@ export function createReservasUI({
       (reservas, snapshot) => {
         reservasCache = Array.isArray(reservas) ? reservas : [];
         renderReservasTable(snapshot);
+        paintUnreadMarks();
         refreshCalendarSafe();
       },
       (err) => {
@@ -277,12 +297,24 @@ export function createReservasUI({
         reservasBody.innerHTML = `<tr><td colspan="6">Error al cargar reservas.</td></tr>`;
       }
     );
+
+    // Índice de chats en vivo: repinta las marcas de no-leído cuando cambian.
+    if (typeof subscribeToChatsIndex === "function" && !unsubChats) {
+      unsubChats = subscribeToChatsIndex((map) => {
+        chatsCache = map instanceof Map ? map : new Map();
+        paintUnreadMarks();
+      });
+    }
   }
 
   function stop() {
     if (unsub) {
       unsub();
       unsub = null;
+    }
+    if (unsubChats) {
+      unsubChats();
+      unsubChats = null;
     }
   }
 

@@ -1930,6 +1930,36 @@ align-items: end;
   display: inline-block;
 }
 
+/* Badge/contador de mensajes de clientes sin leer en el nav (hostMsgBadge).
+   El JS controla display (none/inline-flex); aquí solo el aspecto de pastilla. */
+.nav-badge {
+  background: #e53e3e;
+  color: #fff;
+  border-radius: 999px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* Reserva con mensajes del cliente sin leer: fondo tenue + acento y punto rojos.
+   Funciona en tabla (escritorio) y en tarjeta (móvil). El td::before ya lo usa
+   el data-label en móvil, así que el punto va en ::after. */
+.intranet .reserva-row.has-unread td { background: #fff6f6; }
+.intranet .reserva-row.has-unread td:first-child { box-shadow: inset 3px 0 0 #e53e3e; }
+.intranet .reserva-row.has-unread td:first-child::after {
+  content: " ●";
+  color: #e53e3e;
+  font-size: 10px;
+  vertical-align: middle;
+}
+
 /* Editor inline debajo de la fila seleccionada (móvil) */
 .edit-inline {
   margin: 8px 0 16px;

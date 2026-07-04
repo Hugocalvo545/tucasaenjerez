@@ -109,7 +109,8 @@ export function createDashboardUI({ db, escapeHtml, getPropertiesCache }) {
         activa: !!p.activa,
         llegadas: 0,
         salidas: 0,
-        unreadHost: 0,
+        unreadHost: 0,   // total de mensajes de clientes sin leer (contador)
+        unreadChats: 0,  // nº de chats con al menos un mensaje sin leer
       });
     });
 
@@ -141,6 +142,7 @@ export function createDashboardUI({ db, escapeHtml, getPropertiesCache }) {
           llegadas: 0,
           salidas: 0,
           unreadHost: 0,
+          unreadChats: 0,
         });
       }
 
@@ -148,11 +150,49 @@ export function createDashboardUI({ db, escapeHtml, getPropertiesCache }) {
 
       if (inRangeArrival) row.llegadas++;
       if (inRangeDeparture) row.salidas++;
+    }
 
-      const chatId = r.reservaId || r.id;
-      const chat = chatsCache.get(chatId);
+    // ── No-leídos POR reservaId (chatId === reservaId) ─────────────────────────
+    // Recorremos los CHATS (no las reservas) para contar por reserva concreta:
+    // así dos reservas DISTINTAS del mismo alojamiento cuentan como 2 chats (no
+    // se fusionan), y cada chat se cuenta UNA sola vez y se atribuye a la reserva
+    // (y por ella al alojamiento) correcta. Los docs-sombra del pack no tienen
+    // chat propio, así que no aparecen aquí.
+    const reservaById = new Map();
+    for (const r of reservasCache) {
+      if (isCancelled(r) || isPackShadow(r)) continue;
+      const rid = String(r.reservaId || r.id || "");
+      if (rid) reservaById.set(rid, r);
+    }
+
+    for (const [chatId, chat] of chatsCache) {
+      // unreadHost es un contador. Ignoramos valores absurdos (docs viejos que
+      // guardaban un timestamp): un contador real nunca llega a decenas de miles.
       const u = Number(chat?.unreadHost || 0);
-      if (u > 0) row.unreadHost += u;
+      if (!(Number.isFinite(u) && u > 0 && u < 100000)) continue;
+
+      const r = reservaById.get(String(chatId));
+      if (!r) continue; // chat sin reserva visible (cancelada/sombra/fuera de índice)
+
+      const propId = String(r.propertyId || "");
+      if (!propId) continue;
+
+      if (!byProp.has(propId)) {
+        byProp.set(propId, {
+          id: propId,
+          nombre: r.propertyName || propId,
+          ciudad: "",
+          activa: true,
+          llegadas: 0,
+          salidas: 0,
+          unreadHost: 0,
+          unreadChats: 0,
+        });
+      }
+
+      const row = byProp.get(propId);
+      row.unreadHost += u;   // suma de mensajes sin leer
+      row.unreadChats += 1;  // cada chat (reservaId) cuenta una vez
     }
 
     const cancelaciones = 0;
@@ -182,7 +222,11 @@ export function createDashboardUI({ db, escapeHtml, getPropertiesCache }) {
           ? `<span class="dot ok"></span> Abierto`
           : `<span class="dot off"></span> Inactivo`;
 
-        const unread = p.unreadHost > 0 ? `<strong>${p.unreadHost}</strong>` : "0";
+        // "5 (3 chats)" = total mensajes sin leer + nº de chats con no leídos.
+        // Si 0 → solo "0". Singular "(1 chat)".
+        const unread = p.unreadHost > 0
+          ? `<strong>${p.unreadHost} (${p.unreadChats === 1 ? "1 chat" : `${p.unreadChats} chats`})</strong>`
+          : "0";
 
         return `
           <tr class="dash-prop-row" data-prop-id="${escapeHtml(p.id)}">

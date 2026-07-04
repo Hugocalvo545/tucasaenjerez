@@ -1,5 +1,5 @@
 // perfil/user-area.js
-import { auth, db, serverTimestamp } from "../shared/firebase.js";
+import { auth, db, serverTimestamp, increment } from "../shared/firebase.js";
 import { parseEsDate, parseISODateLocal } from "../shared/utils.js";
 
 // Media
@@ -7,7 +7,6 @@ const FALLBACK_IMG = "../img/placeholder-alojamiento.jpg";
 const propertyMediaCache = new Map(); // propertyId -> { imageMain, images: [] }
 
 // Estado interno
-let unreadUnsubscribe = null;
 let unreadMap = new Map();
 
 let reservasCache = [];
@@ -180,6 +179,9 @@ function initUserReservationsListener(uid) {
           .filter((r) => !r.packId && !String(r.id || r.reservaId || "").includes("__"));
         reservasFiltered = [...reservasCache];
         applyReservasFilters();
+
+        // (Re)cablea los listeners de "no leído" para los chats de estas reservas.
+        initUserUnreadListeners(reservasCache);
       },
       (err) => {
         console.error("Error cargando reservas del usuario", err);
@@ -188,38 +190,58 @@ function initUserReservationsListener(uid) {
     );
 }
 
-// Listener unread (opcional)
-function initUserUnreadListener(uid) {
-  if (unreadUnsubscribe) unreadUnsubscribe();
+// Listener unread: un chat tiene mensajes sin leer para el huésped si
+// unreadGuest > 0 (contador que el anfitrión incrementa al enviar y el huésped
+// resetea a 0 al abrir). El doc de chat NO tiene guestId, así que no se puede
+// filtrar por query; en su lugar escuchamos /chats/{reservaId} de cada reserva
+// del usuario (chatId === reservaId), que el huésped SÍ puede leer.
+let unreadChatUnsubs = [];
+let unreadWiredKey = "";
 
-  unreadUnsubscribe = db
-    .collection("chats")
-    .where("guestId", "==", uid)
-    .where("unreadGuest", ">", 0)
-    .onSnapshot(
+function stopUserUnreadListeners() {
+  unreadChatUnsubs.forEach((fn) => { try { fn(); } catch (_) {} });
+  unreadChatUnsubs = [];
+}
+
+function refreshUnreadBadge() {
+  let total = 0;
+  for (const n of unreadMap.values()) total += n;
+
+  const badge = el("userMsgBadge");
+  if (badge) {
+    badge.textContent = total > 9 ? "9+" : String(total);
+    badge.style.display = total ? "inline-flex" : "none";
+  }
+
+  paintUnreadMarksInTable();
+}
+
+function initUserUnreadListeners(reservas) {
+  // Solo re-cablear si cambió el conjunto de reservas (evita thrash).
+  const ids = (reservas || []).map((r) => r.id).filter(Boolean).sort();
+  const key = ids.join("|");
+  if (key === unreadWiredKey) return;
+  unreadWiredKey = key;
+
+  stopUserUnreadListeners();
+  unreadMap = new Map();
+
+  ids.forEach((reservaId) => {
+    const unsub = db.collection("chats").doc(reservaId).onSnapshot(
       (snap) => {
-        unreadMap = new Map();
-        let total = 0;
-
-        snap.docs.forEach((d) => {
-          const data = d.data() || {};
-          const n = Number(data.unreadGuest || 0);
-          if (n > 0) {
-            unreadMap.set(d.id, n);
-            total += n;
-          }
-        });
-
-        const badge = el("userMsgBadge");
-        if (badge) {
-          badge.textContent = total > 9 ? "9+" : String(total);
-          badge.style.display = total ? "inline-flex" : "none";
-        }
-
-        paintUnreadMarksInTable();
+        const data = snap.exists ? (snap.data() || {}) : {};
+        const n = Number(data.unreadGuest || 0);
+        // Contador; ignora valores absurdos por si acaso (docs viejos).
+        if (Number.isFinite(n) && n > 0 && n < 100000) unreadMap.set(reservaId, n);
+        else unreadMap.delete(reservaId);
+        refreshUnreadBadge();
       },
-      (err) => console.error("Error listener unreadGuest", err)
+      (err) => console.error("Error listener unreadGuest chat", reservaId, err)
     );
+    unreadChatUnsubs.push(unsub);
+  });
+
+  refreshUnreadBadge();
 }
 
 function paintUnreadMarksInTable() {
@@ -544,7 +566,11 @@ function bindChatForm() {
           createdAt: serverTimestamp(),
         });
 
-      await db.collection("chats").doc(currentReservaId).set({ unreadHost: serverTimestamp() }, { merge: true });
+      // unreadHost es un CONTADOR de mensajes del cliente sin leer por el anfitrión
+      // (no un timestamp): el anfitrión lo resetea a 0 al abrir el chat, y el
+      // dashboard/badge lo cuentan. Antes escribía serverTimestamp() y por eso el
+      // dashboard mostraba un número gigante y el badge no funcionaba.
+      await db.collection("chats").doc(currentReservaId).set({ unreadHost: increment(1) }, { merge: true });
 
       chatInput.value = "";
     } catch (err) {
@@ -568,6 +594,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!user) return;
 
     initUserReservationsListener(user.uid);
-    // initUserUnreadListener(user.uid);
+    // El badge de "no leído" se cablea dentro del listener de reservas
+    // (initUserUnreadListeners), una vez conocidas las reservas del usuario.
   });
 });

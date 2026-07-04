@@ -1504,6 +1504,31 @@ button.gm-ui-hover-effect{
   background: rgba(0,0,0,0.06);
 }
 
+/* Fila con mensajes de chat sin leer: acento rojo + fondo tenue. */
+.user-reserva-row.has-unread td:first-child {
+  box-shadow: inset 3px 0 0 #e53e3e;
+}
+.user-reserva-row.has-unread {
+  background: #fff6f6;
+}
+
+/* Badge/contador de no leídos en el nav (cliente e intranet comparten clase). */
+.nav-badge {
+  background: #e53e3e;
+  color: #fff;
+  border-radius: 999px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
 .reserva-carousel{
   width:100%;
   border-radius:12px;

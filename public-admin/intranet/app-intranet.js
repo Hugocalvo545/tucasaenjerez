@@ -75,10 +75,10 @@ function setActiveTabDOM(tab) {
   tabButtons.forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
   tabContents.forEach((c) => c.classList.toggle("active", c.id === `tab-${tab}`));
 
-  if (tab === "reservas") {
-    const badge = document.getElementById("hostMsgBadge");
-    if (badge) badge.style.display = "none";
-  }
+  // NO reseteamos/ocultamos el badge de no-leídos al entrar en "Reservas":
+  // el aviso debe seguir hasta que se ABRA el chat de cada reserva (eso sí
+  // resetea unreadHost:0, y solo el de esa reserva, en chat-ui.openChatForReserva).
+  // El badge lo controla getTotalUnreadHost sobre los chats en tiempo real.
 }
 
 function getRoute() {
@@ -225,6 +225,7 @@ const reservasUI = createReservasUI({
   chatUI,
   calendarAdmin,
   subscribeToReservas,
+  subscribeToChatsIndex,
 });
 
 const dashboardUI = createDashboardUI({

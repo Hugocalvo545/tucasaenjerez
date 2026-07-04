@@ -197,10 +197,10 @@ service cloud.firestore {
       // No reabre nada: cualquier otro campo (lastMessage, unreadGuest, etc.) → denegado.
       allow create: if isSignedIn()
         && request.auth.uid == get(/databases/$(database)/documents/reservas/$(chatId)).data.userId
-        && request.resource.data.keys().hasOnly(["unreadHost"]);
+        && request.resource.data.keys().hasOnly(["unreadHost", "unreadGuest"]);
       allow update: if isSignedIn()
         && request.auth.uid == get(/databases/$(database)/documents/reservas/$(chatId)).data.userId
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["unreadHost"]);
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["unreadHost", "unreadGuest"]);
 
       match /mensajes/{mensajeId} {
 
